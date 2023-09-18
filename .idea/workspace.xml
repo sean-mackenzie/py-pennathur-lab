@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/ex5_keithley_manual.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/ex6_keithley_manual_data_store.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/ex7_keithley_manual_staircase_sweep.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/ex8_keithley_manual_custom_sweep.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/external/custom_script_from_studying_the_manual.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/external/keithley_gpib_defaults.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="2VXoqM5kUV6aLIt7I8BNhbVF4eh" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="" />
+      <created>1694991976068</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1694991976068</updated>
+      <workItem from="1694991977935" duration="215000" />
+      <workItem from="1695009432232" duration="9337000" />
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+</project>
