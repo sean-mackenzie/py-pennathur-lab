@@ -24,7 +24,7 @@ keithley.write(':SOUR:DEL 0.1')  # 100ms source delay.
 keithley.write(':OUTP ON')  # Turn on source output.
 keithley.query_ascii_values(':READ?', container=np.array)  # Trigger sweep, request data.
 
-""" Linear and log staircase sweep commands
+""" Custom sweep commands
 
 :SOURce:VOLTage:MODE LIST               Select voltage list (custom) sweep mode.
 :SOURce:LIST:VOLTage < list>            Define V-source list (list = V1, V2,... Vn).

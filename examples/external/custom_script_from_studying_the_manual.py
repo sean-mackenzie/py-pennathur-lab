@@ -45,7 +45,7 @@ sense_voltage_range = 1100  # Volts
 # Table 3-5, Section 3-18: Basic source-measure commands
 
 # --- SOURCE COMMANDS
-keithley.write('SOURce:FUNCtion[:MODE] VOLT')  # Select source function (name = VOLTage or CURRent).
+keithley.write('SOURce:FUNCtion:MODE VOLT')  # Select source function (name = VOLTage or CURRent).
 # keithley.write(':SOUR:FUNC VOLT')
 keithley.write(':SOURce:VOLTage:MODE FIXed')  # Select fixed sourcing mode for V-source.
 # keithley.write(':SOUR:VOLT:MODE FIX')
