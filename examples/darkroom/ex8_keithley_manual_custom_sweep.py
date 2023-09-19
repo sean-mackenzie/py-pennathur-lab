@@ -12,8 +12,8 @@ keithley = rm.open_resource("GPIB::{}".format(GPIB))
 keithley.write('*RST')  # Restore GPIB default
 keithley.write(':SENS:FUNC:CONC OFF')  # Turn off concurrent functions.
 keithley.write(':SOUR:FUNC VOLT')  # Volts source function.
-keithley.write(':SENS:FUNC ‘CURR:DC’')  # Current sense function.
-keithley.write(':SENS:CURR:PROT 0.1')  # 100mA current compliance.
+keithley.write(':SENS:FUNC "CURR:DC"')  # Current sense function.
+keithley.write(':SENS:CURR:PROT 1E-3')  # 100mA current compliance.
 keithley.write(':SOUR:VOLT:MODE LIST')  # List volts sweep mode.
 keithley.write(':SOUR:LIST:VOLT 7,1,3,8,2')  # 7V, 1V, 3V, 8V, 2V sweep points.
 keithley.write(':TRIG:COUN 5')  # Trigger count = # sweep points.
@@ -22,7 +22,7 @@ keithley.write(':TRIG:COUN 5')  # Trigger count = # sweep points.
 #       * You can use ':SOUR:SWE:POIN?' query to read the number of points.
 keithley.write(':SOUR:DEL 0.1')  # 100ms source delay.
 keithley.write(':OUTP ON')  # Turn on source output.
-keithley.query_ascii_values(':READ?', container=np.array)  # Trigger sweep, request data.
+data = keithley.query_ascii_values(':READ?', container=np.array)  # Trigger sweep, request data.
 
 """ Custom sweep commands
 
@@ -32,3 +32,9 @@ keithley.query_ascii_values(':READ?', container=np.array)  # Trigger sweep, requ
 :SOURce:LIST:VOLTage:POINts?            Query length of V-source list.
 :SOURce:SWEep:RANGing <name>            Select source ranging (name = BEST, AUTO, or FIXed).
 """
+
+# Sean Code
+
+keithley.write(':OUTP OFF')  # End example given in manual
+
+print(data)

@@ -12,7 +12,7 @@ keithley = rm.open_resource("GPIB::{}".format(GPIB))
 keithley.write('*RST')  # Restore GPIB default
 keithley.write(':SENS:FUNC:CONC OFF')  # Turn off concurrent functions.
 keithley.write(':SOUR:FUNC CURR')  # Current source function.
-keithley.write(':SENS:FUNC ‘VOLT:DC’')  # Volts sense function.
+keithley.write(':SENS:FUNC "VOLT:DC"')  # Volts sense function.
 keithley.write(':SENS:VOLT:PROT 1')  # 1V voltage compliance.
 keithley.write(':SOUR:CURR:START 1E-3')  # 1mA start current.
 keithley.write(':SOUR:CURR:STOP 10E-3')  # 10mA stop current.
@@ -26,7 +26,7 @@ keithley.write(':TRIG:COUN 10')  # Trigger count = # sweep points.
 #       * You can use ':SOUR:SWE:POIN?' query to read the number of points.
 keithley.write(':SOUR:DEL 0.1')  # 100ms source delay.
 keithley.write(':OUTP ON')  # Turn on source output.
-keithley.query_ascii_values(':READ?', container=np.array)  # Trigger sweep, request data.
+data = keithley.query_ascii_values(':READ?', container=np.array)  # Trigger sweep, request data.
 
 """ Linear and log staircase sweep commands
 
@@ -39,3 +39,7 @@ keithley.query_ascii_values(':READ?', container=np.array)  # Trigger sweep, requ
 :SOURce:SWEep:DIREction <name>  Set sweep direction. Name = UP (sweep start to stop) or DOWn (sweep stop to start).
 :SOURce:SWEep:CABort <name>     Abort on compliance. Name = NEVer (disable), EARLy (start of SDM cycle), or LATE (end of SDM cycle).
 """
+
+# Sean Code:
+
+print(data)

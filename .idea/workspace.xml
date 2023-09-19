@@ -2,11 +2,24 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/examples/external/keithley_commands_reference.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/ex7_sean_staircase_sweep.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/ex7_sean_staircase_sweep_descending.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/ex7_sean_staircase_sweep_up_and_down.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/results/ex6_keithley_manual_data_store.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/results/ex7_sean_staircase_sweep.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/results/ex7_sean_staircase_sweep_descending.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/darkroom/results/ex7_sean_staircase_sweep_up_and_down.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex1_keithley_establish_connection.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex1_keithley_establish_connection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex2_keithley_sweep_pyvisa.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex2_keithley_sweep_pyvisa.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex3_keithley_sweep_matlab_copy.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex3_keithley_sweep_matlab_copy.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex4_keithley_sweep_nanofab.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex4_keithley_sweep_nanofab.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex5_keithley_manual.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex5_keithley_manual.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex6_keithley_manual_data_store.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex6_keithley_manual_data_store.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex7_keithley_manual_staircase_sweep.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex7_keithley_manual_staircase_sweep.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/examples/darkroom/ex8_keithley_manual_custom_sweep.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex8_keithley_manual_custom_sweep.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/external/custom_script_from_studying_the_manual.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/external/custom_script_from_studying_the_manual.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/external/keithley_gpib_defaults.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/external/keithley_gpib_defaults.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/external/Keithley I-V Sweep SM zipper.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/external/Keithley I-V Sweep SM zipper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/external/keithley_commands_reference.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/external/keithley_commands_reference.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -23,19 +36,30 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="ProjectId" id="2VXoqM5kUV6aLIt7I8BNhbVF4eh" />
-  <component name="ProjectLevelVcsManager">
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
   </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/nanolab/PythonProjects/py-pennathur-lab/examples/darkroom"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\nanolab\PythonProjects\py-pennathur-lab\examples\darkroom" />
+    </key>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -48,8 +72,13 @@
       <workItem from="1694991977935" duration="215000" />
       <workItem from="1695009432232" duration="9337000" />
       <workItem from="1695063281152" duration="2037000" />
+      <workItem from="1695066017645" duration="1948000" />
+      <workItem from="1695081434005" duration="10393000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -61,6 +90,17 @@
         </entry>
       </map>
     </option>
-    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep.coverage" NAME="ex7_sean_staircase_sweep Coverage Results" MODIFIED="1695085088690" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep_descending.coverage" NAME="ex7_sean_staircase_sweep_descending Coverage Results" MODIFIED="1695085293887" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex8_keithley_manual_custom_sweep.coverage" NAME="ex8_keithley_manual_custom_sweep Coverage Results" MODIFIED="1695085765486" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_keithley_manual_staircase_sweep.coverage" NAME="ex7_keithley_manual_staircase_sweep Coverage Results" MODIFIED="1695081882620" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex6_keithley_manual_data_store.coverage" NAME="ex6_keithley_manual_data_store Coverage Results" MODIFIED="1695084966449" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep_up_and_down.coverage" NAME="ex7_sean_staircase_sweep_up_and_down Coverage Results" MODIFIED="1695091551275" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex5_keithley_manual.coverage" NAME="ex5_keithley_manual Coverage Results" MODIFIED="1695066150515" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
   </component>
 </project>

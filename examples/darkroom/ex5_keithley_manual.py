@@ -1,3 +1,7 @@
+"""
+NOTE: this program is confirmed to work with Keithley (9/18/2023)
+"""
+
 import pyvisa
 import numpy as np
 
@@ -34,10 +38,13 @@ keithley.write(':FORM:ELEM CURR')  # Current reading only.
 keithley.write('OUTP ON')  # Output on before measuring.
 
 # 5. Read data
-keithley.query_ascii_values(':READ?', container=np.array)  # Trigger, acquire reading.
+data = keithley.query_ascii_values(':READ?', container=np.array)  # Trigger, acquire reading.
 # NOTE: Instrument must be addressed to talk after :READ? to acquire data.
 
 # 6. Turn off output
 keithley.write(':OUTP OFF')  # End example given in manual
 
-# I assume you would want to shut down the device after this.
+# I assume you would want to shut down the device after this...
+# NOTE: 9/18/2023 - It actually seems like this shuts down the instrument just fine because I can ru-run program.
+
+print(data)

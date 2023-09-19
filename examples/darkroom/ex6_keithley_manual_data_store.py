@@ -1,27 +1,34 @@
 import pyvisa
 import numpy as np
+from os.path import join
 
 GPIB = 23
-
+num_points = 100
+elements_sense = 'VOLTage, CURRent, RESistance, TIME'
 # ---
 
 rm = pyvisa.ResourceManager()
 keithley = rm.open_resource("GPIB::{}".format(GPIB))
+keithley.timeout = 10000  # set timeout to 5 seconds
 
 # 0.
 keithley.write('*RST')  # Restore GPIB default
+
+keithley.write(':FORMat:ELEMents:SENSe ' + elements_sense)
+keithley.write(':TRACe:TSTamp:FORMat ABSolute')
+
 keithley.write(':SOUR:VOLT 10')  # Source 10V.
 keithley.write(':TRAC:FEED SENS')  # Store raw readings in buffer.
-keithley.write(':TRAC:POIN 10')  # Store 10 readings in buffer.
+keithley.write(':TRAC:POIN ' + str(num_points))  # Store 10 readings in buffer.
 keithley.write(':TRAC:FEED:CONT NEXT')  # Enable buffer.
-keithley.write(':TRIG:COUN 10')  # Trigger count = 10.
+keithley.write(':TRIG:COUN ' + str(num_points))  # Trigger count = 10.
 keithley.write(':OUTP ON')  # Turn on output.
 keithley.write(':INIT')  # Trigger readings.
-keithley.query_ascii_values(':TRACE:DATA?', container=np.array)  # Request raw buffer readings.
+data = keithley.query_ascii_values(':TRACE:DATA?', container=np.array)  # Request raw buffer readings.
 keithley.write(':CALC3:FORM MEAN')  # Select mean buffer statistic.
-keithley.query_ascii_values(':CALC3:DATA?', container=np.array)  # Request buffer mean data.
+mean = keithley.query_ascii_values(':CALC3:DATA?', container=np.array)  # Request buffer mean data.
 keithley.write(':CALC3:FORM SDEV')  # Select standard deviation statistic.
-keithley.query_ascii_values(':CALC3:DATA?', container=np.array)  # Request standard deviation data.
+std = keithley.query_ascii_values(':CALC3:DATA?', container=np.array)  # Request standard deviation data.
 
 """ Data Store Commands
 
@@ -36,3 +43,44 @@ keithley.query_ascii_values(':CALC3:DATA?', container=np.array)  # Request stand
 :CALCulate3:DATA?           Read buffer statistic data
 
 """
+
+# --- The following is Sean code.
+
+# Turn off output
+keithley.write(':OUTP OFF')  # End example given in manual
+
+print("Keithley (internal) mean: {}".format(mean))
+print("Keithley (internal) std: {}".format(std))
+
+# -
+
+data_struct = np.reshape(data, (num_points, 4))
+
+print("External mean: {}".format(np.mean(data_struct, axis=0)))
+print("External std: {}".format(np.std(data_struct, axis=0)))
+
+# -
+
+import matplotlib.pyplot as plt
+path_results = r'C:\Users\nanolab\PythonProjects\py-pennathur-lab\examples\darkroom\results'
+
+sampling_rate = np.round(np.max(data_struct[:, 3]) / len(data_struct[:, 3]), 5)
+print("Sampling Rate: {}".format(np.round(sampling_rate, 4)))
+print("Time to sample 100 points: {}".format(np.round(sampling_rate * 100, 3)))
+print("Time to sample 500 points: {}".format(np.round(sampling_rate * 500, 3)))
+
+fig, ax = plt.subplots()
+ax.plot(data_struct[:, 3], data_struct[:, 1], '-o',
+        label=sampling_rate)
+ax.set_xlabel('TSTamp (s)')
+ax.set_ylabel('CURRent (A)')
+ax.legend(title='Sampling rate (s)')
+
+plt.suptitle('Constant VOLTage, :TRACe:DATA? from buffer')
+plt.tight_layout()
+plt.savefig(join(path_results, 'ex6_keithley_manual_data_store.png'), dpi=300)
+plt.show()
+plt.close()
+
+
+

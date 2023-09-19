@@ -25,7 +25,7 @@ DevName = 'w25 - Au on thermal SiO2' #in filename of  saved plot
 NewFolder = True    # save data into a subfolder?
 FolderName = 'data'    # Only used if NewFolder=True
 
-Keithley_GPIB_Addr = 22     # GPIB Address of the Keithley (in Menu/Comms)
+Keithley_GPIB_Addr = 23     # GPIB Address of the Keithley (in Menu/Comms)
 
 '''Voltage Sweep settings'''
 CurrentCompliance = 1.00e-3    # compliance (max) current, in Amps
@@ -41,7 +41,7 @@ dir = 'pos'      # initial sweep direction: 'pos'itive or 'neg'ative.
 
 ''' You shouldn't need to edit anything below'''
 ## Import some modules:
-import pyvisa as visa             # PyVISA module fro GPIB communication, installed
+import pyvisa as visa             # PyVISA module for GPIB communication, installed
 import time             # to allow pause between measurements
 import os               # manipulate file paths and make directories
 import numpy as np      # matlab-like array math
@@ -68,7 +68,7 @@ elif dir == 'neg':
 # Open Visa connections to instruments
 #keithley = visa.GpibInstrument(22)     # GPIB addr 22
 rm = visa.ResourceManager()
-keithley = rm.get_instrument(  'GPIB::' + str(Keithley_GPIB_Addr)  )
+keithley = rm.open_resource(  'GPIB::' + str(Keithley_GPIB_Addr)  )
 
 
 # Setup Keithley for  current loop
@@ -89,12 +89,21 @@ for V in Vspace:
     print("Voltage set to: " + str(V) + " V" )
     keithley.write(":SOUR:VOLT " + str(V))
     time.sleep(0.1)    # add second between
-    data = keithley.ask(":READ?")   #returns string with many values (V, I, ...)
-    answer = data.split(',')    # remove delimiters, return values into list elements
-    I = eval( answer.pop(1) ) * 1e6     # convert to number
+    data = keithley.write(":READ?")   #returns string with many values (V, I, ...)
+    if isinstance(data, (str)):
+        answer = data.split(',')    # remove delimiters, return values into list elements
+        I = eval(answer.pop(1)) * 1e6  # convert to number
+    else:
+        answer = data
+        I = float(answer) * 1e6
+
+    print(data)
+    print(I)
+
     Current.append( I )
     
-    vread = eval( answer.pop(0) )
+    # vread = eval( answer.pop(0) )
+    vread = V
     Voltage.append(vread)
     #Current.append(  I  )          # read the current
     
