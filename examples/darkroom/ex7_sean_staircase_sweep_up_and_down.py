@@ -12,7 +12,7 @@ num_points = len(values)
 current_range = 110E-6
 
 # FREQUENCY
-source_measure_delay = 0.015  # (s)
+source_measure_delay = 0.005  # (s) 0.015
 NPLC = 0.25  # (Number of Power Line Cycles)
 integration_period = NPLC / 60
 
@@ -78,8 +78,6 @@ data = [item for sublist in datas for item in sublist]
 
 print("Data Elements " + data_elements)
 data_struct = np.reshape(data, (num_points * 2, num_elements))
-
-idxV, idxC, idxT, idxR, idxSTAT = 0, 1, 2, 3, 4
 
 sampling_rate = np.round((data_struct[-1, idxT] - data_struct[0, idxT]) / len(data_struct[:, idxT]), 5)
 print("Sampling Rate: {}".format(np.round(sampling_rate, 4)))
