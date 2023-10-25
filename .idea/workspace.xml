@@ -2,10 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/WaferTests/I-V/IV_triangle_wave_arbitrary_config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/playground/trigex1_keithley_establish_connection_to_multi_instruments.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex7_sean_staircase_sweep_up_and_down.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex7_sean_staircase_sweep_up_and_down.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/darkroom/ex8_keithley_manual_custom_sweep.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/ex8_keithley_manual_custom_sweep.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/examples/darkroom/results/ex7_sean_staircase_sweep_up_and_down.png" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/results/ex7_sean_staircase_sweep_up_and_down.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/darkroom/results/ex8_keithley_manual_custom_sweep.png" beforeDir="false" afterPath="$PROJECT_DIR$/examples/darkroom/results/ex8_keithley_manual_custom_sweep.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,6 +18,17 @@
       <list>
         <option value="Python Script" />
       </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
     </option>
   </component>
   <component name="Git.Settings">
@@ -39,12 +51,14 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/nanolab/PythonProjects/py-pennathur-lab/examples/darkroom&quot;
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/nanolab/PythonProjects/py-pennathur-lab/examples/playground&quot;
   }
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\nanolab\PythonProjects\py-pennathur-lab\examples\playground" />
       <recent name="C:\Users\nanolab\PythonProjects\py-pennathur-lab\examples\darkroom" />
+      <recent name="C:\Users\nanolab\PythonProjects\py-pennathur-lab\WaferTests\I-V" />
     </key>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -60,7 +74,15 @@
       <workItem from="1695063281152" duration="2037000" />
       <workItem from="1695066017645" duration="1948000" />
       <workItem from="1695081434005" duration="10530000" />
-      <workItem from="1695255277063" duration="2739000" />
+      <workItem from="1695255277063" duration="2873000" />
+      <workItem from="1696814027804" duration="6684000" />
+      <workItem from="1696833651078" duration="582000" />
+      <workItem from="1696835145496" duration="1455000" />
+      <workItem from="1697069595061" duration="5550000" />
+      <workItem from="1697088600103" duration="586000" />
+      <workItem from="1697092521820" duration="4358000" />
+      <workItem from="1698208754556" duration="1436000" />
+      <workItem from="1698263267921" duration="5583000" />
     </task>
     <servers />
   </component>
@@ -82,12 +104,16 @@
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$IV_triangle_wave_arbitrary_config.coverage" NAME="IV_triangle_wave_arbitrary_config Coverage Results" MODIFIED="1697100546305" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/I-V" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$trigex1_config_multi_instrument_trigger.coverage" NAME="trigex1_config_multi_instrument_trigger Coverage Results" MODIFIED="1698209098137" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$IV_triangle_wave.coverage" NAME="IV_triangle_wave Coverage Results" MODIFIED="1696814842875" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/I-V" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep.coverage" NAME="ex7_sean_staircase_sweep Coverage Results" MODIFIED="1695085088690" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$trigex1_keithley_establish_connection_to_multi_instruments.coverage" NAME="trigex1_keithley_establish_connection_to_multi_instruments Coverage Results" MODIFIED="1698269051093" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/playground" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep_descending.coverage" NAME="ex7_sean_staircase_sweep_descending Coverage Results" MODIFIED="1695085293887" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
-    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex8_keithley_manual_custom_sweep.coverage" NAME="ex8_keithley_manual_custom_sweep Coverage Results" MODIFIED="1695259674130" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex8_keithley_manual_custom_sweep.coverage" NAME="ex8_keithley_manual_custom_sweep Coverage Results" MODIFIED="1696814409375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_keithley_manual_staircase_sweep.coverage" NAME="ex7_keithley_manual_staircase_sweep Coverage Results" MODIFIED="1695081882620" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex6_keithley_manual_data_store.coverage" NAME="ex6_keithley_manual_data_store Coverage Results" MODIFIED="1695084966449" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
-    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep_up_and_down.coverage" NAME="ex7_sean_staircase_sweep_up_and_down Coverage Results" MODIFIED="1695259705314" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep_up_and_down.coverage" NAME="ex7_sean_staircase_sweep_up_and_down Coverage Results" MODIFIED="1696814428216" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex5_keithley_manual.coverage" NAME="ex5_keithley_manual Coverage Results" MODIFIED="1695066150515" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
   </component>
 </project>
