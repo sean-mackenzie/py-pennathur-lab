@@ -26,52 +26,6 @@ The error LED will turn on when one of the following conditions occurs:
     * Illegal device-dependent command option (IDDCO)
     * Illegal device-dependent command (IDDC)
 
-NOTES ON POWERING ON THE TCU:
-
-0. There is a "self-test" procedure however this requires hooking up all trigger and
-    digital inputs and outputs to each other (which I don't want to do).
-1. When I power on the TCU and no instruments are powered on,
-    --> only the POWER ON LED is ON.
-2. If I power on an instrument (e.g., Keithley),
-    --> The "IN" LED corresponding to the Keithle's "CHANNEL #" turns ON.
-3. If I power off that same instrument,
-    --> The "IN" LED remains turned ON.
----> Maybe this means that the Keithley's internal program automatically outputs a trigger upon initialization,
----> and, that I need to first clear any triggers from the Keithley?
-
-# ---
-
-NOTES ON COMMUNICATING WITH THE TCU:
-
-When I run the following code:
----
-TCU = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB))
-TCU.write('*IDN?')
-print(TCU.read_bytes(25))
----
-I get the message:      b'255\r\n255\r\n255\r\n255\r\n255\r\n'
-
-But, when I run:
----
-print(TCU.query('*IDN?'))
----
-I get the message: 255
-
---> This means to me that the default read/write terminations must be correct.
---> However, the TCU LED's for "TALK" and "ERROR" remain ON after querying.
---> --> Does that mean there is an error?
-
-Additionally, when I inspect the device in debugger mode:
-    * after running: TCU = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB))
-I get the following properties by default:
-    * CR = '\r'
-    * LF = '\n'
-    * encoding = 'ascii'
-    * read_termination = None
-    * write_termination = '\r\n'
-    * timeout = 3000
-
-
 ---
 
 NOTES ON TRIGGER OPERATION:
@@ -88,69 +42,52 @@ lit until that channel is cleared.
 NOTES ON TRIGGER PROGRAMMING:
 
 The following is a list of example programs from the Model 2361 Trigger Control Unit manual:
+    OUTPUT715;"1>2X"        If 1 is triggered, trigger out 2.
+    OUTPUT715;"1*2>1X"     If 1 and 2 are triggered, trigger out 1.
 
-Simple examples:
-
-OUTPUT715;"1>2X"        If 1 is triggered, trigger out 2.
-
-OUTPUT715;"1*2>1X"     If 1 and 2 are triggered, trigger out 1.
-
-Example of simple examples:
-
-I think "OUTPUT715;" is akin to "keithley.write(" ") statement. Not sure yet though (10/25/23).
-
-"1" and "2" are the channels.
-
-"*" is the LOGICAL AND operator.
-
-">" is the I/O separator. It separates the input expression from the output expression.
-
-"X" commands the TCU to execute the current program.
+Operators:
+    "1" and "2" are the channels.
+    "*" is the LOGICAL AND operator.
+    ">" is the I/O separator. It separates the input expression from the output expression.
+    "X" commands the TCU to execute the current program.
 
 """
 
 import pyvisa
+import time
 
 GPIB = 15
 BoardIndex = 2
 
-rm = pyvisa.ResourceManager()
-print(rm.list_resources('?*'))  # returns something like: ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::14::INSTR')
-
-# TCU = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB))
-# print(TCU.query('*IDN?'))
-
-"""
-Then, you query the device with the following message: '\*IDN?'. Which is the standard GPIB message for 
-“what are you?” or – in some cases – “what’s on your display at the moment?”. query is a short form for 
-a write operation to send a message, followed by a read.
-
-The response of each instrument is as follows:
-
-Keithley Model 2361 Trigger Control Unit:       255         (the "TALK" and "ERROR" LED's turn red)
-
-"""
-
-
 # ---
-""" TESTING THINGS """
 
+# open resource manager
+rm = pyvisa.ResourceManager()
 
-TCU = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB)) # , read_termination='\r\n')
-print(TCU.query('*IDN?'))
+# open instrument: Keithley Model 2361 Trigger Control Unit (TCU)
+TCU = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB))
 
-"""TCU.write('*IDN?')
-print(TCU.read_bytes(25))
-"""
+# clear the present program
+TCU.write('C0X')
 
-"""
-Additionally, when I inspect the device in debugger mode:
-    * after running: TCU = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB))
-I get the following properties by default:
-    * CR = '\r'
-    * LF = '\n'
-    * encoding = 'ascii'
-    * read_termination = None
-    * write_termination = '\r\n'
-    * timeout = 3000
-"""
+# unlatch triggers for all channels
+for i in range(6):
+    TCU.write('I{}X'.format(i + 1))  # TCU command (In): "I" is the command to unlatch trigger; "n" is the channel.
+    time.sleep(0.5)  # add delay to watch triggers sequentially unlatch
+
+# send a trigger pulse to each channel
+for i in range(6):
+    TCU.write('P{}X'.format(i + 1)) # TCU command: (Pn): "P" is command to send immediate pulse.
+    time.sleep(0.5)  # add delay to watch triggers sequentially pulse
+
+# program trigger events
+TCU.write('2>3;1>2X')   # ";" links multiple relations. ">" corresponds to: if trigger in A, then trig out B
+time.sleep(2)           # add delay to watch if ERROR LED turns ON.
+
+# clear the instrument (general VISA command to clear instrument. NOTE, this clears the programmed trigger as well)
+TCU.clear()
+
+# close the instrument
+TCU.close()
+
+print("Program completed without errors.")

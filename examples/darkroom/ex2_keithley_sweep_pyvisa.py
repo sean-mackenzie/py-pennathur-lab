@@ -35,9 +35,7 @@ the number of readings (10) to the instrument. I won’t explain it in detail. H
 Keithley 2000 manual.
 """
 
-keithley.write("initiate")
-keithley.assert_trigger()
-keithley.wait_for_srq()
+
 """
 Okay, now the instrument is prepared to do the measurement. The above three lines make the instrument wait 
 for a trigger pulse, trigger it, and wait until it sends a “service request”:
@@ -49,15 +47,21 @@ keithley.wait_for_srq()
 """
 By sending the service request, the instrument tells us that the measurement has been finished and that 
 the results are ready for transmission. 
+
+We could read them with keithley.query(“trace:data?”) however, then we’d get:
+-000.0004E+0,-000.0005E+0,-000.0004E+0,-000.0007E+0,
+which we would have to convert to a Python list of numbers.
 """
 
 voltages = keithley.query_ascii_values("trace:data?")
 print("Average voltage: ", sum(voltages) / len(voltages))
 """ read data from Keithley """
 
+"""
+Finally, we should reset the instrument’s data buffer and SRQ status register, 
+so that it’s ready for a new run.
+"""
 keithley.query("status:measurement?")
 keithley.write("trace:clear; trace:feed:control next")
-"""
-Finally, we should reset the instrument’s data buffer and SRQ status register, so that it’s ready for a new run.
-"""
+
 keithley.close()
