@@ -1,8 +1,8 @@
 
 
 
-GPIB = 27
-BoardIndex = 3
+GPIB = 15
+BoardIndex = 2
 
 import pyvisa
 
@@ -23,8 +23,8 @@ print(rm)
 
 """
 
-print(rm.list_resources())
-print(rm.list_resources('?*'))
+print(rm.list_resources())  # only list "::INSTR" resources
+print(rm.list_resources('?*'))  # list all resources
 # returns something like: ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::14::INSTR')
 
 my_instrument = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB))
@@ -36,8 +36,8 @@ The default value is ‘?*::INSTR’ which means that by default only instrument
 with ‘::INSTR’ are listed (in particular USB RAW resources and TCPIP SOCKET resources are not listed). 
 To list all resources present, pass ‘?*’ to list_resources.
 
-In this case, there is a GPIB instrument with instrument number 14, so you ask the ResourceManager to 
-open “‘GPIB0::14::INSTR’” and assign the returned object to the my_instrument.
+In this case, there is a GPIB instrument with instrument number = 14 and BoardIndex = 0, so you ask the ResourceManager
+to  open “‘GPIB0::14::INSTR’” and assign the returned object to the my_instrument.
 
 Notice open_resource has given you an instance of GPIBInstrument class (a subclass of the more generic Resource).
 """
@@ -47,6 +47,11 @@ print(my_instrument.query('*IDN?'))
 Then, you query the device with the following message: '\*IDN?'. Which is the standard GPIB message for 
 “what are you?” or – in some cases – “what’s on your display at the moment?”. query is a short form for 
 a write operation to send a message, followed by a read.
+
+The response of each instrument is as follows:
+
+Keithley Model 2361 Trigger Control Unit:       255         (the "TALK" and "ERROR" LED's turn red)
+
 """
 
 # ---
