@@ -33,13 +33,13 @@ GPIB = 27
 BoardIndex = 2
 
 # SOURCING
-Vo, Vmax, dV = 0, 180, 10
+Vo, Vmax, dV = 0, 200, 50
 V_ramp_up = np.arange(Vo, Vmax + Vmax / np.abs(Vmax), dV)
 Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
 print(Vs)
 # SENSING
-Imax = 1e-6
-NPLC = 1  # (default = 1) Set integration rate in line cycles (0.01 to 10)
+Imax = 1e-3
+NPLC = 0.1  # (default = 1) Set integration rate in line cycles (0.01 to 10)
 elements_sense = 'READ,TST,VSO'  # Current, Timestamp, Voltage Source
 idxC, idxT, idxV = 0, 1, 2
 num_elements = len(elements_sense.split(','))
@@ -108,6 +108,9 @@ k3.write(':TRIG:SOUR IMM')             # Select control source (HOLD, IMMediate,
 k3.write(':TRIG:DEL 0')                  # After receiving Measure Event, delay before Device Action
 
 # Set up Source functions
+print(k3.query(':SOUR:VOLT:MCON?'))
+k3.write(':SOUR:VOLT:MCON ON')      # Enable voltage source LO to ammeter LO connection (SVMI)  (default: OFF)
+print(k3.query(':SOUR:VOLT:MCON?'))
 k3.write(':SOUR:VOLT 0')            # Define voltage level: -1000 to +1000 V (default: 0)
 k3.write(':SOUR:VOLT:RANG ' + str(np.abs(Vmax)))     # Define voltage range: <= 100: 100V, >100: 1000 V range (default: 100 V)
 k3.write(':SOUR:VOLT:LIM 1000')     # Define voltage limit: 0 to 1000 V (default: 1000 V)
@@ -129,7 +132,9 @@ k3.write(':INIT')           # Move from IDLE state to ARM Layer 1
 data = []
 for Vapp in Vs:
     k3.write(':SOUR:VOLT ' + str(Vapp))  # Set voltage level
-    data.append(k3.query_ascii_values(':FETCh?'))
+    meas = k3.query_ascii_values(':FETCh?')
+    print(meas)
+    data.append(meas)
 
 k3.write(':SOUR:VOLT 0')    # Set voltage level to 0
 """time.sleep(0.05)

@@ -21,6 +21,15 @@ def append_reverse(arr, single_point_max):
 
     return appended_arr
 
+def keep_voltage(Voltage, length):
+    """Applies defined voltage for n amount of points"""
+    return [Voltage for _ in range(length)]
+
+def pulse(Vinit, Vmax, length):
+    """Creates a pulse going from Vinit to Vmax, staying for n amount of points at Vmax and going back to Vinit"""
+    return append_reverse(arr=np.concatenate((np.arange(Vinit, Vmax + Vmax / np.abs(Vmax), Vmax), keep_voltage(Vmax,length))),
+                   single_point_max=True)
+
 def if_not_create(filepath):
     if not os.path.exists(filepath):
         os.makedirs(filepath)
@@ -33,20 +42,27 @@ GPIB = 27
 BoardIndex = 2
 
 # SOURCING
-Vo, Vmax, dV = 0, 180, 10
-V_ramp_up = np.arange(Vo, Vmax + Vmax / np.abs(Vmax), dV)
-Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
+Vo, Vmax = 0, 250
+dV = Vmax
+# V_up = [Vmax for _ in range(1)]
+# Vs = np.concatenate((V_ramp_up,V_up))
+V_pos_cycle = pulse(Vo, Vmax, 2)
+V_neg_cycle = pulse(Vo, -Vmax, 2)
+# Vs = np.concatenate((keep_voltage(0,5),pulse(Vo,Vmax,2),keep_voltage(0,20),pulse(Vo,-40,1),keep_voltage(0,20),
+#                      pulse(Vo,-Vmax,2),keep_voltage(0,20),pulse(Vo,40,1),keep_voltage(0,5)))
+Vs = np.concatenate((keep_voltage(0,5),pulse(0,50,3),keep_voltage(0,10),pulse(0,-10,2),keep_voltage(0,20),
+                     pulse(0,-90,3),keep_voltage(0,10),pulse(0,10,2),keep_voltage(0,5)))
 print(Vs)
 # SENSING
-Imax = 1e-6
-NPLC = 1  # (default = 1) Set integration rate in line cycles (0.01 to 10)
+Imax = 1e-3
+NPLC = 0.01  # (default = 1) Set integration rate in line cycles (0.01 to 10)
 elements_sense = 'READ,TST,VSO'  # Current, Timestamp, Voltage Source
 idxC, idxT, idxV = 0, 1, 2
 num_elements = len(elements_sense.split(','))
 
-assm = 'ASSM8'
-path_results = r'C:\Users\nanolab\Desktop\sean\test_keithley'
-save_name = '{}-b_{}Vramp_pumpTest3'.format(assm, Vmax)
+assm = 'ASSM45'
+path_results = r'C:\Users\nanolab\Desktop\Damien\ASSM46'
+save_name = '{}_{}test'.format(assm, Vmax)
 plot_title = '{}: Keithley 6517b, NPLC={}'.format(assm, NPLC)
 
 save_ = True
@@ -108,6 +124,9 @@ k3.write(':TRIG:SOUR IMM')             # Select control source (HOLD, IMMediate,
 k3.write(':TRIG:DEL 0')                  # After receiving Measure Event, delay before Device Action
 
 # Set up Source functions
+print(k3.query(':SOUR:VOLT:MCON?'))
+k3.write(':SOUR:VOLT:MCON ON')      # Enable voltage source LO to ammeter LO connection (SVMI)  (default: OFF)
+print(k3.query(':SOUR:VOLT:MCON?'))
 k3.write(':SOUR:VOLT 0')            # Define voltage level: -1000 to +1000 V (default: 0)
 k3.write(':SOUR:VOLT:RANG ' + str(np.abs(Vmax)))     # Define voltage range: <= 100: 100V, >100: 1000 V range (default: 100 V)
 k3.write(':SOUR:VOLT:LIM 1000')     # Define voltage limit: 0 to 1000 V (default: 1000 V)
@@ -116,8 +135,8 @@ k3.write(':SOUR:VOLT:LIM 1000')     # Define voltage limit: 0 to 1000 V (default
 k3.write(':SENS:FUNC "CURR"')               # 'VOLTage[:DC]', 'CURRent[:DC]', 'RESistance', 'CHARge' (default='VOLT:DC')
 # k3.write(':SENS:CURR:APERture <n>')       # (default: 60 Hz = 16.67 ms) Set integration rate in seconds: 167e-6 to 200e-3
 k3.write(':SENS:CURR:NPLC ' + str(NPLC))       # (default = 1) Set integration rate in line cycles (0.01 to 10)
-k3.write(':SENS:CURR:RANG:AUTO OFF')        # Enable (ON) or disable (OFF) autorange
-k3.write(':SENS:CURR:RANG ' + str(Imax))          # Select current range: 0 to 20e-3 (default = 20e-3)
+k3.write(':SENS:CURR:RANG:AUTO ON')        # Enable (ON) or disable (OFF) autorange
+# k3.write(':SENS:CURR:RANG ' + str(Imax))          # Select current range: 0 to 20e-3 (default = 20e-3)
 k3.write(':SENS:CURR:REF 0')                # Specify reference: -20e-3 to 20e-3) (default: 0)
 k3.write(':SENS:CURR:DIG 6')                # Specify measurement resolution: 4 to 7 (default: 6)
 
@@ -129,7 +148,9 @@ k3.write(':INIT')           # Move from IDLE state to ARM Layer 1
 data = []
 for Vapp in Vs:
     k3.write(':SOUR:VOLT ' + str(Vapp))  # Set voltage level
-    data.append(k3.query_ascii_values(':FETCh?'))
+    meas = k3.query_ascii_values(':FETCh?')
+    print(meas)
+    data.append(meas)
 
 k3.write(':SOUR:VOLT 0')    # Set voltage level to 0
 """time.sleep(0.05)
@@ -165,31 +186,33 @@ print("Min. total sampling time ({} samples): {} s".format(num_samples, np.round
 # arrays to plot
 t = data_struct[:, idxT] - data_struct[0, idxT]  # convert to relative time since start
 V = data_struct[:, idxV]
-I = data_struct[:, idxC] * 1e9  # convert to nano Amps
+I = data_struct[:, idxC] * 1e6  # convert to micro Amps
 
-# split into rising/falling traces
-if Vmax > 0:
-    idx_split = np.argmax(V)
-else:
-    idx_split = np.argmin(V)
-    print("detected -V")
-t_rise, t_fall = t[:idx_split + 1], t[idx_split:]
-V_rise, V_fall = V[:idx_split + 1], V[idx_split:]
-I_rise, I_fall = I[:idx_split + 1], I[idx_split:]
+# # split into rising/falling traces
+# if Vmax > 0:
+#     idx_split = np.argmax(V)
+# else:
+#     idx_split = np.argmin(V)
+#     print("detected -V")
+# t_rise, t_fall = t[:idx_split + 1], t[idx_split:]
+# V_rise, V_fall = V[:idx_split + 1], V[idx_split:]
+# I_rise, I_fall = I[:idx_split + 1], I[idx_split:]
 
 # plot
 fig, (ax1, ax2) = plt.subplots(nrows=2, gridspec_kw={'height_ratios': [1, 2]})
 
-ax1.plot(t_rise, V_rise, '-o', color='r', label='Rising')
-ax1.plot(t_fall, V_fall, '-o', color='b', label='Falling')
+# ax1.plot(t_rise, V_rise, '-o', color='r', label='Rising')
+# ax1.plot(t_fall, V_fall, '-o', color='b', label='Falling')
+ax1.plot(t[1:],V[1:],'-o',color='blue')
 ax1.set_xlabel('TSTamp (s)')
 ax1.set_ylabel('VOLTage (V)')
 ax1.legend(title='smpl rate={} ms'.format(int(np.round(sampling_rate * 1e3, 0))))
 
-ax2.plot(V_rise, I_rise, '-o', color='r')
-ax2.plot(V_fall, I_fall, '-o', color='b')
+# ax2.plot(V_rise, I_rise, '-o', color='r')
+# ax2.plot(V_fall, I_fall, '-o', color='b')
+ax2.plot(t[1:],I[1:],'-o', color='b')
 ax2.set_xlabel('VOLTage (V)')
-ax2.set_ylabel('CURRent (nA)')
+ax2.set_ylabel('CURRent (uA)')
 ax2.grid(alpha=0.25)
 
 plt.suptitle(plot_title)

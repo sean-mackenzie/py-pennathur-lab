@@ -46,7 +46,7 @@ def numpy_array_to_string(arr):
 
 
 # --- VARIABLES THAT RARELY CHANGE
-GPIB = 23
+GPIB = 27
 
 # --- KEITHLEY CODE
 """
@@ -72,7 +72,7 @@ NPLC = 0.5  # (Number of Power Line Cycles)
 integration_period = NPLC / 60
 
 # TODO: Set the voltage to 0V at the end of the test, OR, need to do something to remove all charge from system.
-path_results = r'C:\Users\nanolab\Desktop\sean\zipper\xxx'
+path_results = r'C:\Users\nanolab\Desktop\sean\test_keithley'
 save_name = 'W00x_0V_test00_'
 plot_title = 'W00x: source measure delay={} s, NPLC={}'.format(source_measure_delay, NPLC)
 
