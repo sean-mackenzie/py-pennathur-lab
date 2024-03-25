@@ -34,16 +34,16 @@ def if_not_create(filepath):
 
 # Keithley 6517b
 GPIB = 27
-BoardIndex = 2
+BoardIndex = 0
 
 # SOURCING
-Vo, Vmax, dV = 0, 250, 50
+Vo, Vmax, dV = 0, 1, 0.2
 V_ramp_up = np.arange(Vo, Vmax + Vmax / np.abs(Vmax) * 0.5, dV)
 Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
 # Vs = np.concatenate((Vs, Vs * -1))  # fit line to +/-V-I curve.
 print(Vs)
 # SENSING
-Imax = 1e-6  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
+Imax = 1e-3  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
 NPLC = 2  # (default = 1) Set integration rate in line cycles (0.01 to 10)
 elements_sense = 'READ,TST,VSO'  # Current, Timestamp, Voltage Source
 idxC, idxT, idxV = 0, 1, 2
