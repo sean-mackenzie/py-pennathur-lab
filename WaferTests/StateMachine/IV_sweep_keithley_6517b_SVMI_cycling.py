@@ -4,9 +4,13 @@ import pandas as pd
 import os
 from os.path import join
 import numpy as np
+from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
 # ---
+
+def fit_line(x, a, b):
+    return a * x + b
 
 def append_reverse(arr, single_point_max):
     """
@@ -33,20 +37,23 @@ GPIB = 27
 BoardIndex = 0
 
 # SOURCING
-Vo, Vmax, dV = 0, 1, 0.5
-V_ramp_up = np.arange(Vo, Vmax + Vmax / np.abs(Vmax), dV)
-Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
+Vo, Vmax, dV = 3, 18, 3
+V_ramp_up = np.arange(Vo, Vmax + dV / 2, dV)
+Vs = V_ramp_up
+max_num_cycles = 3
+# Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
+# Vs = np.concatenate((Vs, Vs * -1))  # fit line to +/-V-I curve.
 print(Vs)
 # SENSING
-Imax = 1e-6
-NPLC = 1  # (default = 1) Set integration rate in line cycles (0.01 to 10)
+Imax = 1e-6  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
+NPLC = 10  # (default = 1) Set integration rate in line cycles (0.01 to 10)
 elements_sense = 'READ,TST,VSO'  # Current, Timestamp, Voltage Source
 idxC, idxT, idxV = 0, 1, 2
 num_elements = len(elements_sense.split(','))
 
-assm = 'ASSM8'
+assm = 'w18'
 path_results = r'C:\Users\Pennathur Lab\sean\Zipper\RepeatabilityTesting\test_keithley'
-save_name = '{}-b_{}Vramp_pumpTest3'.format(assm, Vmax)
+save_name = '{}_{}Vramp-Cycles'.format(assm, Vmax)
 plot_title = '{}: Keithley 6517b, NPLC={}'.format(assm, NPLC)
 
 save_ = True
@@ -55,13 +62,14 @@ if save_:
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-num_points = len(Vs)
+num_points = len(Vs) * max_num_cycles
 sampling_period = NPLC / 60
 
+"""
 print("Theoretical:")
 print("Sampling period: {} ms".format(np.round(sampling_period * 1e3, 2)))
 print("Min. total sampling time ({} samples): {} s".format(num_points, np.round(sampling_period * num_points, 3)))
-
+"""
 # ----------------------------------------------------------------------------------------------------------------------
 # RUN MEASUREMENT
 
@@ -72,10 +80,13 @@ k3 = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB))
 # RESET to defaults
 k3.write('*RST')
 
+# NOTE: if ZCH OFF is not explicitly sent to Keithley, then no current will be measured.
+k3.write(':SYST:ZCH OFF')   # Enable (ON) or disable (OFF) zero check (default: OFF)
+k3.write(':SYST:ZCOR ON')   # Enable (ON) or disable (OFF) zero correct (default: OFF)
+
 # SYSTEM
 k3.write(':SYST:RNUM:RES')  # reset reading number to zero
-k3.write(':SYST:ZCOR ON')   # Enable (ON) or disable (OFF) zero correct (default: OFF)
-k3.write(':SYST:ZCH OFF')   # Enable (ON) or disable (OFF) zero check (default: OFF)
+#k3.write(':SYST:ZCOR ON')   # Enable (ON) or disable (OFF) zero correct (default: OFF)
 k3.write(':DISP:ENAB ON')   # Enable or disable the front-panel display
 k3.write(':SYST:TSC OFF')    # Enable or disable external temperature readings (default: ON)
 k3.write(':SYST:TST:TYPE REL')  # Configure timestamp type: RELative or RTClock
@@ -108,6 +119,8 @@ k3.write(':TRIG:SOUR IMM')             # Select control source (HOLD, IMMediate,
 k3.write(':TRIG:DEL 0')                  # After receiving Measure Event, delay before Device Action
 
 # Set up Source functions
+k3.write(':SOUR:VOLT:MCON ON')      # Enable voltage source LO to ammeter LO connection (SVMI)  (default: OFF)
+print(k3.query(':SOUR:VOLT:MCON?'))
 k3.write(':SOUR:VOLT 0')            # Define voltage level: -1000 to +1000 V (default: 0)
 k3.write(':SOUR:VOLT:RANG ' + str(np.abs(Vmax)))     # Define voltage range: <= 100: 100V, >100: 1000 V range (default: 100 V)
 k3.write(':SOUR:VOLT:LIM 1000')     # Define voltage limit: 0 to 1000 V (default: 1000 V)
@@ -126,19 +139,24 @@ k3.write('OUTP ON')         # Turn source ON
 k3.write(':SYST:TST:REL:RES')   # Reset relative timestamp to zero seconds
 k3.write(':INIT')           # Move from IDLE state to ARM Layer 1
 
+
+current_threshold = 500e-9
 data = []
-for Vapp in Vs:
-    k3.write(':SOUR:VOLT ' + str(Vapp))  # Set voltage level
-    data.append(k3.query_ascii_values(':FETCh?'))
+for j in range(max_num_cycles):
+    for Vapp in Vs:
+        k3.write(':SOUR:VOLT ' + str(Vapp))  # Set voltage level
+        meas = k3.query_ascii_values(':FETCh?')
+        data.append(meas)
+        meas2 = k3.query_ascii_values(':SENS:DATA:FRESh?')
+        print(meas2)
+        curr = meas2[0]
+        if curr > current_threshold:
+            print("Iteration {}: {} > {} threshold (V={} V)".format(j, curr, current_threshold, Vapp))
+            break
+
 
 k3.write(':SOUR:VOLT 0')    # Set voltage level to 0
-"""time.sleep(0.05)
-k3.write(':SOUR:VOLT -5')    # Set voltage level to 0
-time.sleep(0.05)
-k3.write(':SOUR:VOLT 0')    # Set voltage level to 0
-time.sleep(0.05)"""
 k3.write(':OUTP OFF')       # turn output off
-# k3.write('*RST')            # reset GPIB to default
 k3.close()                  # close instrument
 
 # ---
@@ -146,17 +164,14 @@ k3.close()                  # close instrument
 # ----------------------------------------------------------------------------------------------------------------------
 # POST-PROCESSING
 
+actual_num_points = len(data)
+
 # reshape array
-data_struct = np.reshape(data, (num_points, num_elements))
+data_struct = np.reshape(data, (actual_num_points, num_elements))
 num_samples = len(data_struct[:, 1])
 t_total = data_struct[-1, 1] - data_struct[0, 1]
 sampling_rate = t_total / num_samples
 sampling_freq = 1 / sampling_rate
-
-print("--- Actual:")
-print("Sampling rate: {} ms".format(np.round(sampling_rate * 1e3, 2)))
-print("Sampling frequency: {} Hz".format(np.round(sampling_freq, 1)))
-print("Min. total sampling time ({} samples): {} s".format(num_samples, np.round(t_total, 3)))
 
 # ---
 
@@ -172,7 +187,6 @@ if Vmax > 0:
     idx_split = np.argmax(V)
 else:
     idx_split = np.argmin(V)
-    print("detected -V")
 t_rise, t_fall = t[:idx_split + 1], t[idx_split:]
 V_rise, V_fall = V[:idx_split + 1], V[idx_split:]
 I_rise, I_fall = I[:idx_split + 1], I[idx_split:]
@@ -192,6 +206,19 @@ ax2.set_xlabel('VOLTage (V)')
 ax2.set_ylabel('CURRent (nA)')
 ax2.grid(alpha=0.25)
 
+fit_I_V = False
+if fit_I_V:
+    V_pos, V_neg = V[V > 0], V[V < 0]
+    I_pos, I_neg = I[V > 0], I[V < 0]
+
+    for xd, yd, lbl, clr in zip([V_pos, V_neg], [I_pos, I_neg], ['+V', '-V'], ['r', 'b']):
+        popt, pcov = curve_fit(fit_line, xd, yd)
+        slope, intercept = popt
+        resistance = 1 / slope * 1e6  # account for micro Amps
+        ax2.plot(xd, fit_line(xd, *popt), '-', linewidth=1.5, color=clr,
+                 label='{}: '.format(lbl) + r'$\Omega = $' + '{} kOhms'.format(np.round(resistance * 1e-3, 2)))
+    ax2.legend(loc='upper left')
+
 plt.suptitle(plot_title)
 plt.tight_layout()
 if save_:
@@ -201,5 +228,5 @@ plt.close()
 
 # --- export to excel
 if save_:
-    df = pd.DataFrame(data_struct, columns=['V', 'I', 't'])
+    df = pd.DataFrame(data_struct, columns=['I', 't', 'V'])
     df.to_excel(join(path_results, save_name + '.xlsx'))

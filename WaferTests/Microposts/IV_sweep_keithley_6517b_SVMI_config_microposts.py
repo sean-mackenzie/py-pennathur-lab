@@ -37,13 +37,13 @@ GPIB = 27
 BoardIndex = 0
 
 # SOURCING
-Vo, Vmax, dV = 0, 35, 5
+Vo, Vmax, dV = 0, 1, 0.5
 V_ramp_up = np.arange(Vo, Vmax + Vmax / np.abs(Vmax) * 0.5, dV)
 Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
 # Vs = np.concatenate((Vs, Vs * -1))  # fit line to +/-V-I curve.
 print(Vs)
 # SENSING
-Imax = 1e-6  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
+Imax = 1e-3  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
 NPLC = 2  # (default = 1) Set integration rate in line cycles (0.01 to 10)
 elements_sense = 'READ,TST,VSO'  # Current, Timestamp, Voltage Source
 idxC, idxT, idxV = 0, 1, 2
@@ -63,7 +63,7 @@ dia = 100
 device_id = 2
 run_number = 2
 
-path_results = r'C:\Users\nanolab\Desktop\sean\microposts\{}_{}'.format(wafer, memb)
+path_results = r'C:\Users\Pennathur Lab\sean\Zipper\RepeatabilityTesting\test_keithley\{}_{}'.format(wafer, memb)
 path_results = join(path_results, 'dx{}_dia{}_n{}'.format(dx, dia, device_id))
 
 save_name = '{}_{}Vsweep_dx{}_dia{}_n{}_run{}'.format(assm, Vmax, dx, dia, device_id, run_number)
@@ -78,9 +78,11 @@ if save_:
 num_points = len(Vs)
 sampling_period = NPLC / 60
 
+"""
 print("Theoretical:")
 print("Sampling period: {} ms".format(np.round(sampling_period * 1e3, 2)))
 print("Min. total sampling time ({} samples): {} s".format(num_points, np.round(sampling_period * num_points, 3)))
+"""
 
 # ----------------------------------------------------------------------------------------------------------------------
 # RUN MEASUREMENT
@@ -232,5 +234,5 @@ plt.close()
 
 # --- export to excel
 if save_:
-    df = pd.DataFrame(data_struct, columns=['V', 'I', 't'])
+    df = pd.DataFrame(data_struct, columns=['I', 't', 'V'])
     df.to_excel(join(path_results, save_name + '.xlsx'))

@@ -37,20 +37,20 @@ GPIB = 27
 BoardIndex = 0
 
 # SOURCING
-Vo, Vmax, dV = 0, 1, 0.2
-V_ramp_up = np.arange(Vo, Vmax + Vmax / np.abs(Vmax) * 0.5, dV)
+Vo, Vmax, dV = 2, 16, 2
+V_ramp_up = np.arange(Vo, Vmax + dV / 2, dV)
 Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
 # Vs = np.concatenate((Vs, Vs * -1))  # fit line to +/-V-I curve.
 print(Vs)
 # SENSING
-Imax = 1e-3  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
-NPLC = 2  # (default = 1) Set integration rate in line cycles (0.01 to 10)
+Imax = 1e-6  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
+NPLC = 10  # (default = 1) Set integration rate in line cycles (0.01 to 10)
 elements_sense = 'READ,TST,VSO'  # Current, Timestamp, Voltage Source
 idxC, idxT, idxV = 0, 1, 2
 num_elements = len(elements_sense.split(','))
 
 assm = 'w18'
-path_results = r'C:\Users\nanolab\Desktop\sean\PASSM5\Keithley6517b_Etest'
+path_results = r'C:\Users\Pennathur Lab\sean\Zipper\RepeatabilityTesting\test_keithley'
 save_name = '{}_{}Vramp-Cycles'.format(assm, Vmax)
 plot_title = '{}: Keithley 6517b, NPLC={}'.format(assm, NPLC)
 
@@ -63,10 +63,11 @@ if save_:
 num_points = len(Vs)
 sampling_period = NPLC / 60
 
+"""
 print("Theoretical:")
 print("Sampling period: {} ms".format(np.round(sampling_period * 1e3, 2)))
 print("Min. total sampling time ({} samples): {} s".format(num_points, np.round(sampling_period * num_points, 3)))
-
+"""
 # ----------------------------------------------------------------------------------------------------------------------
 # RUN MEASUREMENT
 
@@ -79,10 +80,11 @@ k3.write('*RST')
 
 # NOTE: if ZCH OFF is not explicitly sent to Keithley, then no current will be measured.
 k3.write(':SYST:ZCH OFF')   # Enable (ON) or disable (OFF) zero check (default: OFF)
+k3.write(':SYST:ZCOR ON')   # Enable (ON) or disable (OFF) zero correct (default: OFF)
 
 # SYSTEM
 k3.write(':SYST:RNUM:RES')  # reset reading number to zero
-k3.write(':SYST:ZCOR ON')   # Enable (ON) or disable (OFF) zero correct (default: OFF)
+#k3.write(':SYST:ZCOR ON')   # Enable (ON) or disable (OFF) zero correct (default: OFF)
 k3.write(':DISP:ENAB ON')   # Enable or disable the front-panel display
 k3.write(':SYST:TSC OFF')    # Enable or disable external temperature readings (default: ON)
 k3.write(':SYST:TST:TYPE REL')  # Configure timestamp type: RELative or RTClock
@@ -115,7 +117,6 @@ k3.write(':TRIG:SOUR IMM')             # Select control source (HOLD, IMMediate,
 k3.write(':TRIG:DEL 0')                  # After receiving Measure Event, delay before Device Action
 
 # Set up Source functions
-print(k3.query(':SOUR:VOLT:MCON?'))
 k3.write(':SOUR:VOLT:MCON ON')      # Enable voltage source LO to ammeter LO connection (SVMI)  (default: OFF)
 print(k3.query(':SOUR:VOLT:MCON?'))
 k3.write(':SOUR:VOLT 0')            # Define voltage level: -1000 to +1000 V (default: 0)
@@ -133,13 +134,24 @@ k3.write(':SENS:CURR:DIG 6')                # Specify measurement resolution: 4 
 
 # Execute configured measurement
 k3.write('OUTP ON')         # Turn source ON
+
+# NOTE: if ZCH OFF is not explicitly sent to Keithley, then no current will be measured.
+# k3.write(':SYST:ZCH OFF')   # Enable (ON) or disable (OFF) zero check (default: OFF)
+# k3.write(':SYST:ZCOR ON')   # Enable (ON) or disable (OFF) zero correct (default: OFF)
+
 k3.write(':SYST:TST:REL:RES')   # Reset relative timestamp to zero seconds
 k3.write(':INIT')           # Move from IDLE state to ARM Layer 1
 
 data = []
 for Vapp in Vs:
     k3.write(':SOUR:VOLT ' + str(Vapp))  # Set voltage level
-    data.append(k3.query_ascii_values(':FETCh?'))
+    meas = k3.query_ascii_values(':FETCh?')
+    print(meas)
+    data.append(meas)
+    #meas2 = k3.query_ascii_values(':SENS:DATA:FRESh?')
+    #print(meas2)
+    meas3 = k3.query_ascii_values(':SENS:DATA:FRESh?')
+    print(meas3)
 
 k3.write(':SOUR:VOLT 0')    # Set voltage level to 0
 k3.write(':OUTP OFF')       # turn output off
@@ -157,10 +169,10 @@ t_total = data_struct[-1, 1] - data_struct[0, 1]
 sampling_rate = t_total / num_samples
 sampling_freq = 1 / sampling_rate
 
-print("--- Actual:")
+"""print("--- Actual:")
 print("Sampling rate: {} ms".format(np.round(sampling_rate * 1e3, 2)))
 print("Sampling frequency: {} Hz".format(np.round(sampling_freq, 1)))
-print("Min. total sampling time ({} samples): {} s".format(num_samples, np.round(t_total, 3)))
+print("Min. total sampling time ({} samples): {} s".format(num_samples, np.round(t_total, 3)))"""
 
 # ---
 
@@ -217,5 +229,5 @@ plt.close()
 
 # --- export to excel
 if save_:
-    df = pd.DataFrame(data_struct, columns=['V', 'I', 't'])
+    df = pd.DataFrame(data_struct, columns=['I', 't', 'V'])
     df.to_excel(join(path_results, save_name + '.xlsx'))
