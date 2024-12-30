@@ -40,20 +40,20 @@ BoardIndex = 0
 Vo, Vmax, dV = 3, 18, 3
 V_ramp_up = np.arange(Vo, Vmax + dV / 2, dV)
 Vs = V_ramp_up
-max_num_cycles = 3
+max_num_cycles = 15
 # Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
 # Vs = np.concatenate((Vs, Vs * -1))  # fit line to +/-V-I curve.
 print(Vs)
 # SENSING
 Imax = 1e-6  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
-NPLC = 10  # (default = 1) Set integration rate in line cycles (0.01 to 10)
+NPLC = 1  # (default = 1) Set integration rate in line cycles (0.01 to 10)
 elements_sense = 'READ,TST,VSO'  # Current, Timestamp, Voltage Source
 idxC, idxT, idxV = 0, 1, 2
 num_elements = len(elements_sense.split(','))
 
 assm = 'w18'
 path_results = r'C:\Users\Pennathur Lab\sean\Zipper\RepeatabilityTesting\test_keithley'
-save_name = '{}_{}Vramp-Cycles'.format(assm, Vmax)
+save_name = '{}_{}Vramp-Cycles_X'.format(assm, Vmax)
 plot_title = '{}: Keithley 6517b, NPLC={}'.format(assm, NPLC)
 
 save_ = True
@@ -194,17 +194,19 @@ I_rise, I_fall = I[:idx_split + 1], I[idx_split:]
 # plot
 fig, (ax1, ax2) = plt.subplots(nrows=2, gridspec_kw={'height_ratios': [1, 2]})
 
-ax1.plot(t_rise, V_rise, '-o', color='r', label='Rising')
+ax1.plot(t_rise, V_rise, '-o', color='b', label='Rising')
 ax1.plot(t_fall, V_fall, '-o', color='b', label='Falling')
 ax1.set_xlabel('TSTamp (s)')
 ax1.set_ylabel('VOLTage (V)')
-ax1.legend(title='smpl rate={} ms'.format(int(np.round(sampling_rate * 1e3, 0))))
+# ax1.legend(title='smpl rate={} ms'.format(int(np.round(sampling_rate * 1e3, 0))))
 
-ax2.plot(V_rise, I_rise, '-o', color='r')
-ax2.plot(V_fall, I_fall, '-o', color='b')
+ax2.plot(V_rise, I_rise, '-o', color='b')
+ax2.plot(V_fall, I_fall, '-o', color='b', label='Measured')
+ax2.axhline(current_threshold * 1e9, color='gray', linestyle='--', label='Threshold (Pull-in)')
 ax2.set_xlabel('VOLTage (V)')
 ax2.set_ylabel('CURRent (nA)')
 ax2.grid(alpha=0.25)
+ax2.legend(loc='lower right', title='Current')
 
 fit_I_V = False
 if fit_I_V:
