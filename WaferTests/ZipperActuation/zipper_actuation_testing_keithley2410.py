@@ -1,4 +1,6 @@
 from os.path import join
+
+import pandas as pd
 import pyvisa
 import numpy as np
 import matplotlib.pyplot as plt
@@ -35,10 +37,10 @@ if __name__ == "__main__":
 
     # --- INPUTS
 
-    path_results = r'C:\Users\nanolab\Desktop\sean\zipper\tests'
-    test_num = 1  # 1: Observe by-eye, 2: Slow linear ramp, 3: Fast ramp, 4: Staircase ramp, 5: Step and Hold
-    Vmax = 30
-    save_id = 'test{}_{}V'.format(test_num, Vmax)
+    path_results = r'C:\Users\nanolab\Desktop\sean\I-V'
+    test_num = 2  # 1: Observe by-eye, 2: Slow linear ramp, 3: Fast ramp, 4: Staircase ramp, 5: Step and Hold
+    Vmax, Vstep = 250, 5
+    save_id = 'test2_test{}_{}V'.format(test_num, Vmax)
     save_fig = True
 
     GPIB = 25
@@ -50,7 +52,7 @@ if __name__ == "__main__":
 
     if test_num == 1:
         # Observe by-eye: linear ramp at speed that can be observed by eye.
-        step = Vmax / np.abs(Vmax) * 5
+        step = Vmax / np.abs(Vmax) * Vstep
         source_measure_delay = 0.15  # (s)
         NPLC = 2  # (Number of Power Line Cycles) integration rate (in line cycles): [0.01 to 10E3] (default = 1)
         single_point_max = False
@@ -60,7 +62,7 @@ if __name__ == "__main__":
         values_up_and_down = append_reverse(values, single_point_max=single_point_max)
     elif test_num == 2:
         # Slow linear ramp
-        step = Vmax / np.abs(Vmax) * 10
+        step = Vmax / np.abs(Vmax) * Vstep
         source_measure_delay = 0.05  # (s)
         NPLC = 1
         single_point_max = True
@@ -70,7 +72,7 @@ if __name__ == "__main__":
         values_up_and_down = append_reverse(values, single_point_max=single_point_max)
     elif test_num == 3:
         # Fast linear ramp
-        step = Vmax / np.abs(Vmax) * 10
+        step = Vmax / np.abs(Vmax) * Vstep
         source_measure_delay = 0.025  # (s)
         NPLC = 0.1
         single_point_max = True
@@ -80,7 +82,7 @@ if __name__ == "__main__":
         values_up_and_down = append_reverse(values, single_point_max=single_point_max)
     elif test_num == 4:
         # Staircase ramp
-        step = Vmax / np.abs(Vmax) * 100
+        step = Vmax / np.abs(Vmax) * Vstep
         source_measure_delay = 0.5  # (s)
         NPLC = 5
         single_point_max = True
@@ -90,7 +92,7 @@ if __name__ == "__main__":
         values_up_and_down = append_reverse(values, single_point_max=single_point_max)
     elif test_num == 5:
         # Step and Hold
-        step = Vmax / np.abs(Vmax) * 75
+        step = Vmax / np.abs(Vmax) * Vstep
         source_measure_delay = 0.35  # (s)
         NPLC = 3
         single_point_max = True
@@ -185,14 +187,22 @@ if __name__ == "__main__":
     # sort by time
     arr_T2, arr_V2 = list(zip(*sorted(zip(arr_T2,arr_V2))))
 
-    # -
-    # plot
+    # --- plotting
 
+    # setup
+    if len(arr_T) > 25:
+        ms_sample = 2
+        lw_time, mkr_time, ms_time = 0.5, '.', 1
+    else:
+        ms_sample = 5
+        lw_time, mkr_time, ms_time = 1, 'o', 3
+
+    # plot
     fig, (ax1, ax2, ax3) = plt.subplots(nrows=3, figsize=(6, 6),
                                         gridspec_kw={'height_ratios': [1, 0.65, 0.65]})
 
-    ax1.plot(arr_T2, arr_V2, '-o', ms=3, color='gray')
-    ax1.plot(arr_T, arr_V, 'o', ms=5, color='tab:blue',
+    ax1.plot(arr_T2, arr_V2, lw=lw_time, marker=mkr_time, ms=ms_time, color='gray')
+    ax1.plot(arr_T, arr_V, 'o', ms=ms_sample, color='tab:blue',
              label='{}, {}'.format(np.round(sampling_time, 1), np.round(sampling_rate, 3)))
     ax1.set_xlabel('TSTamp (s)')
     ax1.set_ylabel('VOLTage (V)')
@@ -200,12 +210,12 @@ if __name__ == "__main__":
     ax1.legend(title='sampling time and rate (s)',
                title_fontsize='small', fontsize='small')
 
-    ax2.plot(arr_T, arr_I, 'o')
+    ax2.plot(arr_T, arr_I, 'o', ms=ms_sample)
     ax2.set_xlabel('TSTamp (s)')
     ax2.set_ylabel('CURRent (A)')
     ax2.grid(alpha=0.25)
 
-    ax3.plot(arr_V, arr_I, 'o')
+    ax3.plot(arr_V, arr_I, 'o', ms=ms_sample)
     ax3.set_xlabel('VOLTage (V)')
     ax3.set_ylabel('CURRent (A)')
     ax3.grid(alpha=0.25)
@@ -216,3 +226,7 @@ if __name__ == "__main__":
         plt.savefig(join(path_results, save_id + '.png'), dpi=300)
     plt.show()
     plt.close()
+
+    # save data
+    df = pd.DataFrame(data_struct, columns=data_elements.split(','))
+    df.to_excel(join(path_results, save_id + '.xlsx'))
