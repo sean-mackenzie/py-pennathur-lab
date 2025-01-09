@@ -5,6 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/test/test_pylablib_andor_control.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/py-pennathur-lab.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/py-pennathur-lab.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -55,21 +58,23 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Python.zipper_actuation_testing_keithley2410.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Python.test_pylablib_andor_control.executor": "Run",
+    "Python.zipper_actuation_testing_keithley2410.executor": "Run",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/nanolab/PythonProjects/py-pennathur-lab/test/test_pylablib_andor_control.py",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Pennathur Lab\PythonProjects\py-pennathur-lab\WaferTests\ZipperActuation" />
@@ -83,7 +88,7 @@
       <recent name="C:\Users\nanolab\PythonProjects\py-pennathur-lab\WaferTests" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.zipper_actuation_testing_keithley2410">
+  <component name="RunManager" selected="Python.test_pylablib_andor_control">
     <configuration name="IV_sweep_keithley_6517b" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="py-pennathur-lab" />
       <option name="ENV_FILES" value="" />
@@ -176,6 +181,30 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="test_pylablib_andor_control" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="py-pennathur-lab" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.11 (py-pennathur-lab)" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test/test_pylablib_andor_control.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="zipper_actuation_testing_keithley2410" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="py-pennathur-lab" />
       <option name="ENV_FILES" value="" />
@@ -204,6 +233,7 @@
       <item itemvalue="Python.IV_sweep_keithley_6517b_SVMI_config" />
       <item itemvalue="Python.IV_sweep_keithley_6517b_SVMI_cycling" />
       <item itemvalue="Python.zipper_actuation_testing_keithley2410" />
+      <item itemvalue="Python.test_pylablib_andor_control" />
       <item itemvalue="Python.IV_sweep_keithley_6517b_SVMI_config_microposts" />
     </list>
   </component>
@@ -269,6 +299,7 @@
       <workItem from="1736321615100" duration="2299000" />
       <workItem from="1736367690114" duration="3980000" />
       <workItem from="1736455137865" duration="632000" />
+      <workItem from="1736456791403" duration="2183000" />
     </task>
     <servers />
   </component>
@@ -300,6 +331,7 @@
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex8_keithley_manual_custom_sweep.coverage" NAME="ex8_keithley_manual_custom_sweep Coverage Results" MODIFIED="1696814409375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$trigex1_config_multi_instrument_trigger.coverage" NAME="trigex1_config_multi_instrument_trigger Coverage Results" MODIFIED="1698209098137" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$IV_sweep_keithley_6517b_SVMI_config_microposts.coverage" NAME="IV_sweep_keithley_6517b_SVMI_config_microposts Coverage Results" MODIFIED="1721543982893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/Microposts" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$test_pylablib_andor_control.coverage" NAME="test_pylablib_andor_control Coverage Results" MODIFIED="1736458743232" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$tst_HVS448_floating_voltage_difference.coverage" NAME="tst_HVS448_floating_voltage_difference Coverage Results" MODIFIED="1704327716686" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex8_keithley_6517b.coverage" NAME="ex8_keithley_6517b Coverage Results" MODIFIED="1698537914475" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$IV_sweep_keithley_6517b.coverage" NAME="IV_sweep_keithley_6517b Coverage Results" MODIFIED="1721543300501" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/I-V" />
