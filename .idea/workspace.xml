@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testing_keithley2410.py" beforeDir="false" afterPath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testing_keithley2410.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -269,6 +268,7 @@
       <workItem from="1735513286331" duration="11140000" />
       <workItem from="1736321615100" duration="2299000" />
       <workItem from="1736367690114" duration="3980000" />
+      <workItem from="1736455137865" duration="632000" />
     </task>
     <servers />
   </component>
