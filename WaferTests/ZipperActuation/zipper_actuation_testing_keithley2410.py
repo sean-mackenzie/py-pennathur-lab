@@ -37,10 +37,10 @@ if __name__ == "__main__":
 
     # --- INPUTS
 
-    path_results = r'C:\Users\nanolab\Desktop\sean\I-V'
+    path_results = r'C:\Users\nanolab\Desktop\sean'
     test_num = 2  # 1: Observe by-eye, 2: Slow linear ramp, 3: Fast ramp, 4: Staircase ramp, 5: Step and Hold
-    Vmax, Vstep = 250, 5
-    save_id = 'test2_test{}_{}V'.format(test_num, Vmax)
+    Vmax, Vstep = 5, 0.5
+    save_id = 'test1_test{}_{}V'.format(test_num, Vmax)
     save_fig = True
 
     GPIB = 25
@@ -150,10 +150,10 @@ if __name__ == "__main__":
     keithley.write(':SOUR:DEL %g' % source_measure_delay)  # 50ms source delay.
 
     keithley.write(':OUTP ON')  # Turn on source output.
+
     data = keithley.query_ascii_values(':READ?', container=np.array)  # Trigger sweep, request data.
 
     # --- POST-PROCESSING
-
     data_elements = keithley.query(':FORMat:ELEMents:SENSe?')
     keithley.write(':OUTP OFF')  # End example given in manual
 
