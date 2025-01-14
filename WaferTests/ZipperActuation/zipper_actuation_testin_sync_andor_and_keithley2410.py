@@ -104,11 +104,11 @@ if __name__ == "__main__":
 
     # --- INPUTS
 
-    path_results = r'C:\Users\nanolab\Desktop\test\I-V'
-    test_id = 1
-    test_num = 1  # 1: Slow linear ramp, 2,3: Staircase ramp defined/arbitrary steps, 4: Step and Hold
-    Vmax = 250
-    Vstep = np.abs(5)  # always positive
+    path_results = r'C:\Users\nanolab\Desktop\sean\zipper\01132025_test-sync'
+    test_id = 16
+    test_num = 2  # 1: Slow linear ramp, 2,3: Staircase ramp defined/arbitrary steps, 4: Step and Hold
+    Vmax = 2.5
+    Vstep = np.abs(0.5)  # always positive
     save_id = 'tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
 
 
@@ -165,7 +165,8 @@ if __name__ == "__main__":
     # --- KEITHLEY CODE
 
     # CURRENT
-    current_range = 1E-6
+    current_range = 10E-6
+    current_compliance = 10E-6
     # VOLTAGE
     values_lst = numpy_array_to_string(values_up_and_down)
     num_points = len(values_up_and_down)
@@ -194,7 +195,7 @@ if __name__ == "__main__":
     k1.write(':SOUR:FUNC VOLT')  # Volts source function.
     k1.write(':SOUR:VOLT:RANG MAX')  # Select V-source range (n = range).
     k1.write(':SENS:FUNC "CURR:DC"')  # Current sense function.
-    k1.write(':SENS:CURR:PROT %g' % current_range)  # 1 mA current compliance.
+    k1.write(':SENS:CURR:PROT %g' % current_compliance)  # 1 mA current compliance.
     k1.write(':SENS:CURR:RANG %g' % current_range)  # 1 mA current compliance.
     k1.write(':SENS:CURR:NPLC %g' % NPLC)  # Specify integration rate (in line cycles): [0.01 to 10E3] (default = 1)
 
@@ -216,7 +217,7 @@ if __name__ == "__main__":
 
     k2.write(':SOUR:VOLT:MODE LIST')  # List volts sweep mode.
     k2.write(':SOUR:LIST:VOLT 4,4,0')  # List sweep points.
-    k2.write(':TRIG:COUN 5')  # Trigger count = # sweep points.
+    k2.write(':TRIG:COUN 3')  # Trigger count = # sweep points.
     k2.write(':SOUR:DEL %g' % 0.05)  # 50ms source delay.
 
     # --- Execute source-measure action
