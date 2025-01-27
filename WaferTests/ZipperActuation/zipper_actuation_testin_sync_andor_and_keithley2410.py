@@ -29,6 +29,76 @@ def numpy_array_to_string(arr):
 
     return joined_str
 
+# --- SET UP TRIGGER KEITHLEY
+
+def setup_2410_trigger(keithley_inst, voltage_levels, delay, nplc):
+    # - set up trigger keithley
+    keithley_inst.write('*RST')  # Restore GPIB default
+    keithley_inst.write(':FORMat:ELEMents:SENSe VOLTage, CURRent, TIME')
+    keithley_inst.write(':DATA:TSTamp:FORMat DELTa')
+    keithley_inst.write(':SOUR:FUNC VOLT')  # Volts source function.
+    keithley_inst.write(':SOUR:VOLT:RANG 10')  # Select V-source range (n = range).
+    keithley_inst.write(':SENS:FUNC "CURR:DC"')  # Current sense function.
+    keithley_inst.write(':SENS:CURR:PROT %g' % 1e-3)  # 1 mA current compliance.
+    keithley_inst.write(':SENS:CURR:RANG %g' % 1e-3)  # 1 mA current compliance.
+    keithley_inst.write(':SENS:CURR:NPLC %g' % nplc)  # Specify integration rate (in line cycles): [0.01 to 10E3] (default = 1)
+
+    keithley_inst.write(':SOUR:VOLT:MODE LIST')  # List volts sweep mode.
+    keithley_inst.write(':SOUR:LIST:VOLT ' + numpy_array_to_string(np.array(voltage_levels)))  # List sweep points.
+    keithley_inst.write(':TRIG:COUN %g' % len(voltage_levels))  # Trigger count = # sweep points.
+    keithley_inst.write(':SOUR:DEL %g' % delay)  # 50ms source delay.
+
+
+def setup_6517_trigger(keithley_inst, voltage_levels, nplc=0.01):
+    # -
+    # --- INITIALIZE KEITHLEY 6517a/b
+    # -
+    # RESET to defaults
+    keithley_inst.write('*RST')
+    # NOTE: if ZCH OFF is not explicitly sent to Keithley, then no current will be measured.
+    keithley_inst.write(':SYST:ZCH OFF')  # Enable (ON) or disable (OFF) zero check (default: OFF)
+    keithley_inst.write(':SYST:ZCOR ON')  # Enable (ON) or disable (OFF) zero correct (default: OFF)
+    # SYSTEM
+    keithley_inst.write(':SYST:RNUM:RES')  # reset reading number to zero
+    keithley_inst.write(':DISP:ENAB ON')  # Enable or disable the front-panel display
+    keithley_inst.write(':SYST:TSC OFF')  # Enable or disable external temperature readings (default: ON)
+    keithley_inst.write(':SYST:TST:TYPE REL')  # Configure timestamp type: RELative or RTClock
+    keithley_inst.write(':TRAC:FEED:CONT NEV')  # disable buffer control
+    keithley_inst.write(':FORM:DATA ASCii')  # Select data format: ASCii, REAL, SREal, DREal
+    keithley_inst.write(':FORM:ELEM READ,TST,VSO')  # data elements: VSOurce, READing, CHANnel, RNUMber, UNITs, TSTamp, STATus, ETEM, HUM
+    # --- Define Trigger Model
+    keithley_inst.write(':INIT:CONT OFF')  # When instrument returns to IDLE layer, CONTINUOUS ON = repeat; OFF = hold in IDLE
+    keithley_inst.write(':ARM:TCON:DIR ACCeptor')  # Wait for Arm Event (default: ACCeptor)
+    keithley_inst.write(':ARM:COUN 1')  # Specify arm count: number of cycles around arm layer (default: 1)
+    keithley_inst.write(':ARM:SOUR IMM')  # Select control source: IMM, TLINk or EXT. (default: IMM)
+    # -
+    keithley_inst.write(':ARM:LAYer2:TCON:DIR ACCeptor')  # Wait for Arm Event
+    keithley_inst.write(':ARM:LAYer2:COUN 1')  # Perform 1 arm layer cycle
+    keithley_inst.write(':ARM:LAYer2:SOUR IMM')  # Immediately go to Arm Layer 2
+    keithley_inst.write(':ARM:LAYer2:DEL 0')  # After receiving Arm Layer 2 Event, delay before going to Trigger Layer
+    # -
+    keithley_inst.write(':TRIG:TCON:DIR ACC')  # Wait for trigger event (TLINK)
+    keithley_inst.write(':TRIG:COUN ' + str(len(voltage_levels)))  # Set measure count (1 to 99999 or INF) (preset: INF; Reset: 1)
+    keithley_inst.write(':TRIG:SOUR IMM')  # Select control source (HOLD, IMMediate, TIMer, MANual, BUS, TLINk, EXTernal) (default: IMM)
+    keithley_inst.write(':TRIG:DEL 0')  # After receiving Measure Event, delay before Device Action
+    # -
+    # Set up Source functions
+    keithley_inst.write(':SOUR:VOLT:MCON ON')  # Enable voltage source LO to ammeter LO connection (SVMI)  (default: OFF)
+    keithley_inst.write(':SOUR:VOLT 4')  # Define voltage level: -1000 to +1000 V (default: 0)
+    keithley_inst.write(':SOUR:VOLT:RANG 10')  # Define voltage range: <= 100: 100V, >100: 1000 V range (default: 100 V)
+    keithley_inst.write(':SOUR:VOLT:LIM 5')  # Define voltage limit: 0 to 1000 V (default: 1000 V)
+
+    # Set up Sense functions
+    keithley_inst.write(':SENS:FUNC "CURR"')  # 'VOLTage[:DC]', 'CURRent[:DC]', 'RESistance', 'CHARge' (default='VOLT:DC')
+    # k3.write(':SENS:CURR:APERture <n>')       # (default: 60 Hz = 16.67 ms) Set integration rate in seconds: 167e-6 to 200e-3
+    keithley_inst.write(':SENS:CURR:NPLC ' + str(nplc))  # (default = 1) Set integration rate in line cycles (0.01 to 10)
+    keithley_inst.write(':SENS:CURR:RANG:AUTO OFF')  # Enable (ON) or disable (OFF) autorange
+    keithley_inst.write(':SENS:CURR:RANG 20e-3')  # Select current range: 0 to 20e-3 (default = 20e-3)
+    keithley_inst.write(':SENS:CURR:REF 0')  # Specify reference: -20e-3 to 20e-3) (default: 0)
+    keithley_inst.write(':SENS:CURR:DIG 6')  # Specify measurement resolution: 4 to 7 (default: 6)
+
+
+# --- PLOTTING
 
 def post_process_data(data_struct, idxVCTRS, source_measure_delay, NPLC, path_results, save_id, show_plot=True):
     idxV, idxC, idxT, idxR, idxSTAT = idxVCTRS
@@ -95,19 +165,22 @@ if __name__ == "__main__":
 
     # --- SETUP
     rm = pyvisa.ResourceManager()
-    # print(rm.list_resources())  # only list "::INSTR" resources
-    # # returns something like: ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::14::INSTR')
+    check_inst = False  # True False
+    if check_inst is True:
+        print(rm.list_resources())  # only list "::INSTR" resources
+        # # returns something like: ('ASRL1::INSTR', 'ASRL2::INSTR', 'GPIB0::14::INSTR')
+        raise ValueError("Check instruments are connected.")
 
-    k1_source_GPIB, k1_source_board_index = 25, 0  # Keithley: source measure unit
-    k2_trigger_GPIB, k2_trigger_board_index = 23, 1  # Keithley: used to trigger camera
+    k1_source_GPIB, k1_source_board_index = 25, 1  # Keithley: source measure unit
+    k2_trigger_GPIB, k2_trigger_board_index, k2_inst = 24, 0, '6517a'  # Keithley: used to trigger camera
 
     # --- INPUTS
 
-    path_results = r'C:\Users\nanolab\Desktop\sean\zipper\01132025_test-sync'
-    test_id = 6
-    test_num = 2  # 1: Slow linear ramp, 2,3: Staircase ramp defined/arbitrary steps, 4: Step and Hold
-    Vmax = 2.5
-    Vstep = np.abs(1.25)  # always positive
+    path_results = r'C:\Users\nanolab\Desktop\sean\zipper\012625_test-65176a-trigger'
+    test_id = 7
+    test_num = 1  # 1: Slow linear ramp, 2,3: Staircase ramp defined/arbitrary steps, 4: Step and Hold
+    Vmax = 75
+    Vstep = np.abs(5)  # always positive
     save_id = 'tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
 
 
@@ -210,36 +283,94 @@ if __name__ == "__main__":
     k1.write(':SOUR:DEL %g' % source_measure_delay)  # 50ms source delay.
 
     # - set up trigger keithley
-    k2.write('*RST')  # Restore GPIB default
-    k2.write(':FORMat:ELEMents:SENSe ' + elements_sense)
-    k2.write(':DATA:TSTamp:FORMat DELTa')
-    k2.write(':SOUR:FUNC VOLT')  # Volts source function.
-    k2.write(':SOUR:VOLT:RANG 10')  # Select V-source range (n = range).
-    k2.write(':SENS:FUNC "CURR:DC"')  # Current sense function.
-    k2.write(':SENS:CURR:PROT %g' % 1e-3)  # 1 mA current compliance.
-    k2.write(':SENS:CURR:RANG %g' % 1e-3)  # 1 mA current compliance.
-    k2.write(':SENS:CURR:NPLC %g' % trigger_NPLC)  # Specify integration rate (in line cycles): [0.01 to 10E3] (default = 1)
+    if k2_inst == '2410':
+        setup_2410_trigger(keithley_inst=k2, voltage_levels=trigger_voltage,
+                           delay=trigger_source_measure_delay, nplc=trigger_NPLC)
+        """
+        k2.write('*RST')  # Restore GPIB default
+        k2.write(':FORMat:ELEMents:SENSe ' + elements_sense)
+        k2.write(':DATA:TSTamp:FORMat DELTa')
+        k2.write(':SOUR:FUNC VOLT')  # Volts source function.
+        k2.write(':SOUR:VOLT:RANG 10')  # Select V-source range (n = range).
+        k2.write(':SENS:FUNC "CURR:DC"')  # Current sense function.
+        k2.write(':SENS:CURR:PROT %g' % 1e-3)  # 1 mA current compliance.
+        k2.write(':SENS:CURR:RANG %g' % 1e-3)  # 1 mA current compliance.
+        k2.write(':SENS:CURR:NPLC %g' % trigger_NPLC)  # Specify integration rate (in line cycles): [0.01 to 10E3] (default = 1)
+    
+        k2.write(':SOUR:VOLT:MODE LIST')  # List volts sweep mode.
+        k2.write(':SOUR:LIST:VOLT ' + numpy_array_to_string(np.array(trigger_voltage)))  # List sweep points.
+        k2.write(':TRIG:COUN %g' % trigger_count)  # Trigger count = # sweep points.
+        k2.write(':SOUR:DEL %g' % trigger_source_measure_delay)  # 50ms source delay.
+        """
 
-    k2.write(':SOUR:VOLT:MODE LIST')  # List volts sweep mode.
-    k2.write(':SOUR:LIST:VOLT ' + numpy_array_to_string(np.array(trigger_voltage)))  # List sweep points.
-    k2.write(':TRIG:COUN %g' % trigger_count)  # Trigger count = # sweep points.
-    k2.write(':SOUR:DEL %g' % trigger_source_measure_delay)  # 50ms source delay.
+        # --- Execute source-measure action
+
+        # Initialize both Keithleys (but don't set a voltage level)
+        k2.write(':OUTP ON')  # Turn on camera trigger output.
+        k1.write(':OUTP ON')  # Turn on voltage source output.
+
+        # Trigger a very fast reading from trigger Keithley, then trigger source Keithley
+        k2.write(':INIT')  # Trigger camera readings.
+        k1.write(':INIT')  # Trigger voltage readings.
+
+        data_stimulus = k1.query_ascii_values(':FETCh?', container=np.array)  # request data.
+        data_delay = k2.query_ascii_values(':FETCh?', container=np.array)  # request data.
+        data_elements = k1.query(':FORMat:ELEMents:SENSe?')
+
+        # close instruments
+        k1.write(':OUTP OFF')
+        k2.write(':OUTP OFF')
+
+    elif k2_inst == '6517a':
+        # NOTE: the variable voltage_levels and nplc have no effect on Keithley triggering.
+        # All "synchronization" settings are pre-programmed to be as fast as possible
+        # and no data is recorded.
+        setup_6517_trigger(keithley_inst=k2, voltage_levels=trigger_voltage, nplc=trigger_NPLC)
+        """
+        # Execute configured measurement
+        k3.write('OUTP ON')  # Turn source ON
+        k3.write(':SYST:TST:REL:RES')  # Reset relative timestamp to zero seconds
+        k3.write(':INIT')  # Move from IDLE state to ARM Layer 1
+        """
+
+        # --- Execute source-measure action
+
+        # initialize the source Keithley
+        k1.write(':OUTP ON')  # Turn on voltage source output (but no voltage level will be set until triggered)
+
+        # For Keithley 6517a, the following command will source a non-zero voltage, and thus trigger the camera
+        k2.write(':OUTP ON')  # Turn on trigger voltage source to whatever voltage level was set.
+
+        # Trigger the source Keithley
+        k1.write(':INIT')  # Trigger voltage readings.
+        data_stimulus = k1.query_ascii_values(':FETCh?', container=np.array)  # request data.
+        data_elements = k1.query(':FORMat:ELEMents:SENSe?')
+        # close instruments
+        k1.write(':OUTP OFF')
+        k2.write(':SOUR:VOLT 0')
+        k2.write(':OUTP OFF')
+    else:
+        raise ValueError("Trigger instrument not understood.")
 
     # --- Execute source-measure action
 
-    k2.write(':OUTP ON')  # Turn on camera trigger output.
+    """
+    # k2.write(':OUTP ON')  # Turn on camera trigger output.
     k1.write(':OUTP ON')  # Turn on voltage source output.
 
-    k2.write(':INIT')  # Trigger camera readings.
+    # k2.write(':INIT')  # Trigger camera readings.
+    k2.write(':OUTP ON')  # Turn on camera trigger output.
     k1.write(':INIT')  # Trigger voltage readings.
 
-    data_stimulus = k1.query_ascii_values(':FETCh?', container=np.array)  # trigger voltage sweep, request data.
-    data_delay = k2.query_ascii_values(':FETCh?', container=np.array)  # send trigger to camera
+    data_stimulus = k1.query_ascii_values(':FETCh?', container=np.array)  # request data.
+    # data_delay = k2.query_ascii_values(':FETCh?', container=np.array)  # request data.
 
     # close instruments
     data_elements = k1.query(':FORMat:ELEMents:SENSe?')
     k1.write(':OUTP OFF')
+    k2.write(':SOUR:VOLT 0')
     k2.write(':OUTP OFF')
+    """
 
     # ---
 
@@ -252,8 +383,9 @@ if __name__ == "__main__":
                       show_plot=True)
     # ---
     # post-process trigger data
-    data_struct2 = np.reshape(data_delay, (trigger_count, num_elements))
-    pd.DataFrame(data_struct2, columns=data_elements.split(',')).to_excel(join(path_results, save_id + '_trigger.xlsx'))
+    if k2_inst == '2410':
+        data_struct2 = np.reshape(data_delay, (trigger_count, num_elements))
+        pd.DataFrame(data_struct2, columns=data_elements.split(',')).to_excel(join(path_results, save_id + '_trigger.xlsx'))
 
 
 
