@@ -5,8 +5,8 @@ import numpy as np
 # inputs
 
 # Keithley 6517b
-GPIB = 27
-BoardIndex = 3
+GPIB = 24
+BoardIndex = 0
 
 I_autorange = 0     # 1 = autorange; 0 = I_range
 I_range = 2e-3      # CURRent RANGe = 2 mA
@@ -64,3 +64,5 @@ k3.write(':SOUR:VOLT 0')            # Set voltage level to 0
 k3.write(':OUTP OFF')  # turn output off
 k3.write('*RST')  # reset GPIB to default
 k3.close()
+
+print(data)

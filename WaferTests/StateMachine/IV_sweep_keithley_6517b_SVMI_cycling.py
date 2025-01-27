@@ -30,31 +30,40 @@ def if_not_create(filepath):
         os.makedirs(filepath)
 
 # ---
+# To print available instruments
+"""
+rm = pyvisa.ResourceManager()
+print(rm.list_resources())
+raise ValueError()
+"""
+
 # inputs
 
 # Keithley 6517b
-GPIB = 27
+GPIB = 24
 BoardIndex = 0
 
 # SOURCING
-Vo, Vmax, dV = 3, 18, 3
-V_ramp_up = np.arange(Vo, Vmax + dV / 2, dV)
+#Vo, Vmax, dV = 0.1, 0.5, 0.025
+#V_ramp_up = np.arange(Vo, Vmax + dV / 2, dV)
+Vo, Vmax, dV = 1, 0, -1
+V_ramp_up = np.arange(Vo, Vmax, dV)
 Vs = V_ramp_up
-max_num_cycles = 15
+max_num_cycles = 1
 # Vs = append_reverse(arr=V_ramp_up, single_point_max=True)
 # Vs = np.concatenate((Vs, Vs * -1))  # fit line to +/-V-I curve.
 print(Vs)
 # SENSING
-Imax = 1e-6  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
-NPLC = 1  # (default = 1) Set integration rate in line cycles (0.01 to 10)
+Imax = 20e-3  # NOTE: if CURRent RANGe is too high, then you will measure a relatively large bias current (e.g., -220 nA for 1mA range)
+NPLC = 0.1  # (default = 1) Set integration rate in line cycles (0.01 to 10)
 elements_sense = 'READ,TST,VSO'  # Current, Timestamp, Voltage Source
 idxC, idxT, idxV = 0, 1, 2
 num_elements = len(elements_sense.split(','))
 
-assm = 'w18'
+assm = 'TEST-TTL-TRIGGER-SPEED'
 path_results = r'C:\Users\Pennathur Lab\sean\Zipper\RepeatabilityTesting\test_keithley'
 save_name = '{}_{}Vramp-Cycles_X'.format(assm, Vmax)
-plot_title = '{}: Keithley 6517b, NPLC={}'.format(assm, NPLC)
+plot_title = '{}: Keithley 6517a, NPLC={}'.format(assm, NPLC)
 
 save_ = True
 if save_:
@@ -65,10 +74,13 @@ if save_:
 num_points = len(Vs) * max_num_cycles
 sampling_period = NPLC / 60
 
-"""
+estimated_timeout = num_points * (sampling_period * 4) * 1000 + 200  # (ms)
+
+
 print("Theoretical:")
 print("Sampling period: {} ms".format(np.round(sampling_period * 1e3, 2)))
 print("Min. total sampling time ({} samples): {} s".format(num_points, np.round(sampling_period * num_points, 3)))
+"""
 """
 # ----------------------------------------------------------------------------------------------------------------------
 # RUN MEASUREMENT
@@ -79,6 +91,8 @@ k3 = rm.open_resource('GPIB{}::{}::INSTR'.format(BoardIndex, GPIB))
 
 # RESET to defaults
 k3.write('*RST')
+k3.timeout = estimated_timeout  # Set the timeout error time (units: ms) for PyVISA
+print("Estimated timeout: {} s".format(estimated_timeout / 1000))
 
 # NOTE: if ZCH OFF is not explicitly sent to Keithley, then no current will be measured.
 k3.write(':SYST:ZCH OFF')   # Enable (ON) or disable (OFF) zero check (default: OFF)
@@ -140,20 +154,23 @@ k3.write(':SYST:TST:REL:RES')   # Reset relative timestamp to zero seconds
 k3.write(':INIT')           # Move from IDLE state to ARM Layer 1
 
 
-current_threshold = 500e-9
+current_threshold = 20e-3
 data = []
 for j in range(max_num_cycles):
     for Vapp in Vs:
         k3.write(':SOUR:VOLT ' + str(Vapp))  # Set voltage level
-        meas = k3.query_ascii_values(':FETCh?')
-        data.append(meas)
-        meas2 = k3.query_ascii_values(':SENS:DATA:FRESh?')
-        print(meas2)
-        curr = meas2[0]
+        #meas = k3.query_ascii_values(':FETCh?')
+        #meas = k3.query_ascii_values(':SENS:DATA:FRESh?')
+        #data.append(meas)
+        """print(meas)
+        curr = meas[0]
+        #meas2 = k3.query_ascii_values(':SENS:DATA:FRESh?')
+        #print(meas2)
+        #curr = meas2[0]
         if curr > current_threshold:
             print("Iteration {}: {} > {} threshold (V={} V)".format(j, curr, current_threshold, Vapp))
             break
-
+        """
 
 k3.write(':SOUR:VOLT 0')    # Set voltage level to 0
 k3.write(':OUTP OFF')       # turn output off
@@ -172,6 +189,8 @@ num_samples = len(data_struct[:, 1])
 t_total = data_struct[-1, 1] - data_struct[0, 1]
 sampling_rate = t_total / num_samples
 sampling_freq = 1 / sampling_rate
+print("Time per measurement = {} s".format(sampling_rate))
+print("Sampling frequency = {} Hz".format(sampling_freq))
 
 # ---
 
@@ -180,7 +199,7 @@ sampling_freq = 1 / sampling_rate
 # arrays to plot
 t = data_struct[:, idxT] - data_struct[0, idxT]  # convert to relative time since start
 V = data_struct[:, idxV]
-I = data_struct[:, idxC] * 1e9  # convert to nano Amps
+I = data_struct[:, idxC] * 1e3  # convert to nano Amps
 
 # split into rising/falling traces
 if Vmax > 0:
@@ -202,9 +221,9 @@ ax1.set_ylabel('VOLTage (V)')
 
 ax2.plot(V_rise, I_rise, '-o', color='b')
 ax2.plot(V_fall, I_fall, '-o', color='b', label='Measured')
-ax2.axhline(current_threshold * 1e9, color='gray', linestyle='--', label='Threshold (Pull-in)')
+# ax2.axhline(current_threshold * 1e9, color='gray', linestyle='--', label='Threshold (Pull-in)')
 ax2.set_xlabel('VOLTage (V)')
-ax2.set_ylabel('CURRent (nA)')
+ax2.set_ylabel('CURRent (mA)')
 ax2.grid(alpha=0.25)
 ax2.legend(loc='lower right', title='Current')
 
