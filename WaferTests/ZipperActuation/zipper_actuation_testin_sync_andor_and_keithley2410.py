@@ -30,7 +30,7 @@ def numpy_array_to_string(arr):
     return joined_str
 
 
-def post_process_data(data_struct, idxVCTRS, NPLC, path_results, save_id, show_plot=True):
+def post_process_data(data_struct, idxVCTRS, source_measure_delay, NPLC, path_results, save_id, show_plot=True):
     idxV, idxC, idxT, idxR, idxSTAT = idxVCTRS
     integration_period = NPLC / 60
     # -
@@ -44,11 +44,10 @@ def post_process_data(data_struct, idxVCTRS, NPLC, path_results, save_id, show_p
     arr_V = data_struct[:, idxV]
     arr_I = data_struct[:, idxC]
     # add time points to show V(t) in between current sampling times
-    arr_Tt = arr_T[1:] - integration_period
-    arr_Vt = arr_V[:-1]
+    arr_Tt = arr_T - source_measure_delay - integration_period
     # concat
-    arr_T2 = np.concatenate((arr_T, arr_Tt))
-    arr_V2 = np.concatenate((arr_V, arr_Vt))
+    arr_T2 = np.concatenate((arr_Tt, arr_T))
+    arr_V2 = np.concatenate((arr_V, arr_V))
     # sort by time
     arr_T2, arr_V2 = list(zip(*sorted(zip(arr_T2, arr_V2))))
     # --- plotting
@@ -105,10 +104,10 @@ if __name__ == "__main__":
     # --- INPUTS
 
     path_results = r'C:\Users\nanolab\Desktop\sean\zipper\01132025_test-sync'
-    test_id = 16
+    test_id = 6
     test_num = 2  # 1: Slow linear ramp, 2,3: Staircase ramp defined/arbitrary steps, 4: Step and Hold
     Vmax = 2.5
-    Vstep = np.abs(0.5)  # always positive
+    Vstep = np.abs(1.25)  # always positive
     save_id = 'tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
 
 
@@ -165,8 +164,8 @@ if __name__ == "__main__":
     # --- KEITHLEY CODE
 
     # CURRENT
-    current_range = 10E-6
-    current_compliance = 10E-6
+    current_range = 10E-3
+    current_compliance = 10E-3
     # VOLTAGE
     values_lst = numpy_array_to_string(values_up_and_down)
     num_points = len(values_up_and_down)
@@ -176,6 +175,12 @@ if __name__ == "__main__":
     elements_sense = 'VOLTage, CURRent, TIME'  #, RESistance, STATus
     idxVCTRS = 0, 1, 2, 3, 4
     num_elements = len(elements_sense.split(','))
+    # ---
+    # Trigger Keithley
+    trigger_voltage = [4, 0]
+    trigger_count = len(trigger_voltage)
+    trigger_source_measure_delay = 0.0
+    trigger_NPLC = 0.01
 
     # ---
 
@@ -213,12 +218,12 @@ if __name__ == "__main__":
     k2.write(':SENS:FUNC "CURR:DC"')  # Current sense function.
     k2.write(':SENS:CURR:PROT %g' % 1e-3)  # 1 mA current compliance.
     k2.write(':SENS:CURR:RANG %g' % 1e-3)  # 1 mA current compliance.
-    k2.write(':SENS:CURR:NPLC %g' % 1)  # Specify integration rate (in line cycles): [0.01 to 10E3] (default = 1)
+    k2.write(':SENS:CURR:NPLC %g' % trigger_NPLC)  # Specify integration rate (in line cycles): [0.01 to 10E3] (default = 1)
 
     k2.write(':SOUR:VOLT:MODE LIST')  # List volts sweep mode.
-    k2.write(':SOUR:LIST:VOLT 4,4,0')  # List sweep points.
-    k2.write(':TRIG:COUN 3')  # Trigger count = # sweep points.
-    k2.write(':SOUR:DEL %g' % 0.05)  # 50ms source delay.
+    k2.write(':SOUR:LIST:VOLT ' + numpy_array_to_string(np.array(trigger_voltage)))  # List sweep points.
+    k2.write(':TRIG:COUN %g' % trigger_count)  # Trigger count = # sweep points.
+    k2.write(':SOUR:DEL %g' % trigger_source_measure_delay)  # 50ms source delay.
 
     # --- Execute source-measure action
 
@@ -228,22 +233,27 @@ if __name__ == "__main__":
     k2.write(':INIT')  # Trigger camera readings.
     k1.write(':INIT')  # Trigger voltage readings.
 
-    # data = k2.query_ascii_values(':READ?', container=np.array)  # send trigger to camera
-    data = k1.query_ascii_values(':FETCh?', container=np.array)  # trigger voltage sweep, request data.
-
-    # ---
+    data_stimulus = k1.query_ascii_values(':FETCh?', container=np.array)  # trigger voltage sweep, request data.
+    data_delay = k2.query_ascii_values(':FETCh?', container=np.array)  # send trigger to camera
 
     # close instruments
     data_elements = k1.query(':FORMat:ELEMents:SENSe?')
     k1.write(':OUTP OFF')
     k2.write(':OUTP OFF')
 
-    # post-process data
-    data_struct = np.reshape(data, (num_points, num_elements))
-    # save data
+    # ---
+
+    # post-process stimulus data
+    data_struct = np.reshape(data_stimulus, (num_points, num_elements))
     pd.DataFrame(data_struct, columns=data_elements.split(',')).to_excel(join(path_results, save_id + '.xlsx'))
-    # plot and save plot
-    post_process_data(data_struct, idxVCTRS, NPLC, path_results, save_id, show_plot=True)
+    post_process_data(data_struct, idxVCTRS,
+                      source_measure_delay, NPLC,
+                      path_results, save_id,
+                      show_plot=True)
+    # ---
+    # post-process trigger data
+    data_struct2 = np.reshape(data_delay, (trigger_count, num_elements))
+    pd.DataFrame(data_struct2, columns=data_elements.split(',')).to_excel(join(path_results, save_id + '_trigger.xlsx'))
 
 
 

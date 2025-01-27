@@ -5,11 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testin_sync_andor_and_keithley2410.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/test_trigger_keithley_using_andor.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testing_keithley2410.py" beforeDir="false" afterPath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testing_keithley2410.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/examples/playground/trigex2_Keithley_Two-Instrument-Trigger-Sync.py" beforeDir="false" afterPath="$PROJECT_DIR$/examples/playground/trigex2_Keithley_Two-Instrument-Trigger-Sync.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testin_sync_andor_and_keithley2410.py" beforeDir="false" afterPath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testin_sync_andor_and_keithley2410.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,27 +56,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.IV_sweep_keithley_6517b_SVMI_config.executor": "Debug",
-    "Python.test_pylablib_andor_control.executor": "Run",
-    "Python.test_trigger_keithley_using_andor.executor": "Run",
-    "Python.zipper_actuation_testin_sync_andor_and_keithley2410.executor": "Run",
-    "Python.zipper_actuation_testing_keithley2410.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/nanolab/PythonProjects/py-pennathur-lab/WaferTests/ZipperActuation/zipper_actuation_testin_sync_andor_and_keithley2410.py",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.IV_sweep_keithley_6517b_SVMI_config.executor&quot;: &quot;Debug&quot;,
+    &quot;Python.test_pylablib_andor_control.executor&quot;: &quot;Run&quot;,
+    &quot;Python.test_trigger_keithley_using_andor.executor&quot;: &quot;Run&quot;,
+    &quot;Python.zipper_actuation_testin_sync_andor_and_keithley2410.executor&quot;: &quot;Run&quot;,
+    &quot;Python.zipper_actuation_testing_keithley2410.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/nanolab/PythonProjects/py-pennathur-lab/WaferTests/ZipperActuation/zipper_actuation_testin_sync_andor_and_keithley2410.py&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\nanolab\PythonProjects\py-pennathur-lab\WaferTests\ZipperActuation" />
@@ -259,11 +256,11 @@
     </configuration>
     <list>
       <item itemvalue="Python.IV_sweep_keithley_6517b_SVMI_config" />
-      <item itemvalue="Python.zipper_actuation_testin_sync_andor_and_keithley2410" />
       <item itemvalue="Python.IV_sweep_keithley_6517b_SVMI_config_microposts" />
       <item itemvalue="Python.IV_sweep_keithley_6517b_SVMI_cycling" />
       <item itemvalue="Python.IV_sweep_keithley_6517b" />
       <item itemvalue="Python.test_pylablib_andor_control" />
+      <item itemvalue="Python.zipper_actuation_testin_sync_andor_and_keithley2410" />
       <item itemvalue="Python.zipper_actuation_testing_keithley2410" />
     </list>
   </component>
@@ -334,6 +331,13 @@
       <workItem from="1736471706817" duration="7344000" />
       <workItem from="1736484121196" duration="5288000" />
       <workItem from="1736549883747" duration="5455000" />
+      <workItem from="1736731261000" duration="1992000" />
+      <workItem from="1736733909886" duration="1276000" />
+      <workItem from="1736797176584" duration="1268000" />
+      <workItem from="1736822171487" duration="1285000" />
+      <workItem from="1736824525424" duration="43000" />
+      <workItem from="1736834016078" duration="1224000" />
+      <workItem from="1736835364908" duration="120000" />
     </task>
     <servers />
   </component>
@@ -357,7 +361,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep_descending.coverage" NAME="ex7_sean_staircase_sweep_descending Coverage Results" MODIFIED="1695085293887" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$test_ex8_keithley2410_sweep.coverage" NAME="zipper_actuation_testing_keithley2410 Coverage Results" MODIFIED="1735542046974" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/ZipperActuation" />
-    <SUITE FILE_PATH="coverage/py_pennathur_lab$zipper_actuation_testin_sync_andor_and_keithley2410.coverage" NAME="zipper_actuation_testin_sync_andor_and_keithley2410 Coverage Results" MODIFIED="1736556400966" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$zipper_actuation_testin_sync_andor_and_keithley2410.coverage" NAME="zipper_actuation_testin_sync_andor_and_keithley2410 Coverage Results" MODIFIED="1736835186332" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$trigex2_Keithley_Two_Instrument_Trigger_Sync.coverage" NAME="trigex2_Keithley_Two-Instrument-Trigger-Sync Coverage Results" MODIFIED="1698389029029" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/playground" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$Keithley_2361_TCU_examples.coverage" NAME="Keithley_2361_TCU_examples Coverage Results" MODIFIED="1698537622049" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/external" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$Keithley_Three_Instrument_Trigger_Sync.coverage" NAME="Keithley_Three-Instrument-Trigger-Sync Coverage Results" MODIFIED="1698395159498" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/external" />
