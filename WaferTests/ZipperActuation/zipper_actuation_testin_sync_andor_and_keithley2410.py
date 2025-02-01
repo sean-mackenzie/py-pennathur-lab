@@ -1,3 +1,4 @@
+import os
 from os.path import join
 
 import pandas as pd
@@ -20,9 +21,12 @@ def append_reverse(arr, single_point_max):
 
     return appended_arr
 
-def numpy_array_to_string(arr):
+def numpy_array_to_string(arr, sig_figs=4):
     # Convert the NumPy array elements to strings
-    str_arr = arr.astype(str)
+    # str_arr = arr.astype(str)
+
+    # keep only significant digits
+    str_arr = np.around(arr, sig_figs).astype(str)
 
     # Join the string elements with commas
     joined_str = ','.join(str_arr)
@@ -172,17 +176,20 @@ if __name__ == "__main__":
         raise ValueError("Check instruments are connected.")
 
     k1_source_GPIB, k1_source_board_index = 25, 1  # Keithley: source measure unit
-    k2_trigger_GPIB, k2_trigger_board_index, k2_inst = 24, 0, '6517a'  # Keithley: used to trigger camera
+    k2_trigger_GPIB, k2_trigger_board_index, k2_inst = 24, 0, None  # '6517a'  # Keithley: used to trigger camera
 
     # --- INPUTS
 
-    path_results = r'C:\Users\nanolab\Desktop\I-V'
-    test_id = 20
-    test_num = 2  # 1: Slow linear ramp, 2,3: Staircase ramp defined/arbitrary steps, 4: Step and Hold
-    Vmax = 250
-    Vstep = np.abs(250)  # always positive
-    save_id = 'tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
+    wid = 'W13_trace-to-C9-0pT-to-GND-to-GND'
+    path_results = r'C:\Users\nanolab\Desktop\I-V\{}'.format(wid)
+    if not os.path.exists(path_results):
+        os.makedirs(path_results)
 
+    test_num = 1  # 1: 150ms staircase ramp, 2,3: 500ms staircase ramp, 4: Step and Hold
+    test_id = 2
+    Vmax = -0.6
+    Vstep = np.abs(0.02)  # always positive
+    save_id = 'loc1_tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
 
     # ------------------------------------------------------------------------------------------------------------------
     # SHOULD NOT NEED TO MODIFY SCRIPT BELOW
@@ -237,11 +244,13 @@ if __name__ == "__main__":
     # --- KEITHLEY CODE
 
     # CURRENT
-    current_range = 25E-6
-    current_compliance = 25E-6
+    current_range = 20E-3
+    current_compliance = 20E-3
     # VOLTAGE
-    values_lst = numpy_array_to_string(np.array([0, 250, 0, -250, 0, 250, 0, -250, 0, 250, 0])) # numpy_array_to_string(values_up_and_down)
-    num_points = len(values_lst)  # len(values_up_and_down)
+    values_lst = numpy_array_to_string(values_up_and_down)
+    num_points = len(values_up_and_down)
+    if num_points > 120:
+        raise ValueError("Number of points is too large. Will cause Keithley error.")
     # FREQUENCY
     estimated_timeout = num_points * source_measure_delay * 1000 * 2 + 200  # (ms)
     # DATA TYPES
@@ -259,7 +268,8 @@ if __name__ == "__main__":
 
     # Initialize instruments
     k1 = rm.open_resource('GPIB{}::{}::INSTR'.format(k1_source_board_index, k1_source_GPIB))
-    k2 = rm.open_resource('GPIB{}::{}::INSTR'.format(k2_trigger_board_index, k2_trigger_GPIB))
+    if k2_inst is not None:
+        k2 = rm.open_resource('GPIB{}::{}::INSTR'.format(k2_trigger_board_index, k2_trigger_GPIB))
 
     # - set up source keithley
     k1.write('*RST')  # Restore GPIB default
