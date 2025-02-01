@@ -176,11 +176,11 @@ if __name__ == "__main__":
 
     # --- INPUTS
 
-    path_results = r'C:\Users\nanolab\Desktop\sean\zipper\012625_test-65176a-trigger'
-    test_id = 7
-    test_num = 1  # 1: Slow linear ramp, 2,3: Staircase ramp defined/arbitrary steps, 4: Step and Hold
-    Vmax = 75
-    Vstep = np.abs(5)  # always positive
+    path_results = r'C:\Users\nanolab\Desktop\I-V'
+    test_id = 20
+    test_num = 2  # 1: Slow linear ramp, 2,3: Staircase ramp defined/arbitrary steps, 4: Step and Hold
+    Vmax = 250
+    Vstep = np.abs(250)  # always positive
     save_id = 'tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
 
 
@@ -237,11 +237,11 @@ if __name__ == "__main__":
     # --- KEITHLEY CODE
 
     # CURRENT
-    current_range = 10E-3
-    current_compliance = 10E-3
+    current_range = 25E-6
+    current_compliance = 25E-6
     # VOLTAGE
-    values_lst = numpy_array_to_string(values_up_and_down)
-    num_points = len(values_up_and_down)
+    values_lst = numpy_array_to_string(np.array([0, 250, 0, -250, 0, 250, 0, -250, 0, 250, 0])) # numpy_array_to_string(values_up_and_down)
+    num_points = len(values_lst)  # len(values_up_and_down)
     # FREQUENCY
     estimated_timeout = num_points * source_measure_delay * 1000 * 2 + 200  # (ms)
     # DATA TYPES
@@ -249,7 +249,7 @@ if __name__ == "__main__":
     idxVCTRS = 0, 1, 2, 3, 4
     num_elements = len(elements_sense.split(','))
     # ---
-    # Trigger Keithley
+    # Trigger Keithley (these variables are only used by Keithley 2410)
     trigger_voltage = [4, 0]
     trigger_count = len(trigger_voltage)
     trigger_source_measure_delay = 0.0
@@ -283,7 +283,14 @@ if __name__ == "__main__":
     k1.write(':SOUR:DEL %g' % source_measure_delay)  # 50ms source delay.
 
     # - set up trigger keithley
-    if k2_inst == '2410':
+    if k2_inst is None:
+        # --- Execute source-measure action
+        k1.write(':OUTP ON')  # Turn on voltage source output
+        k1.write(':INIT')  # Trigger voltage readings.
+        data_stimulus = k1.query_ascii_values(':FETCh?', container=np.array)  # request data.
+        data_elements = k1.query(':FORMat:ELEMents:SENSe?')
+        k1.write(':OUTP OFF')
+    elif k2_inst == '2410':
         setup_2410_trigger(keithley_inst=k2, voltage_levels=trigger_voltage,
                            delay=trigger_source_measure_delay, nplc=trigger_NPLC)
         """
@@ -320,9 +327,8 @@ if __name__ == "__main__":
         # close instruments
         k1.write(':OUTP OFF')
         k2.write(':OUTP OFF')
-
     elif k2_inst == '6517a':
-        # NOTE: the variable voltage_levels and nplc have no effect on Keithley triggering.
+        # NOTE: the variable voltage_levels and nplc have no effect on Keithley 6517 triggering.
         # All "synchronization" settings are pre-programmed to be as fast as possible
         # and no data is recorded.
         setup_6517_trigger(keithley_inst=k2, voltage_levels=trigger_voltage, nplc=trigger_NPLC)
