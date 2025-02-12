@@ -360,7 +360,7 @@ if __name__ == "__main__":
         # Trigger the source Keithley
         k1.write(':INIT')  # Trigger voltage readings.
         data_stimulus = k1.query_ascii_values(':FETCh?', container=np.array)  # request data.
-        data_elements = k1.query(':FORMat:ELEMents:SENSe?')
+        data_elements = k1.query(':FORMat:ELEMents:SENSe?')  # :FORM:ELEM?
         # close instruments
         k1.write(':OUTP OFF')
         k2.write(':SOUR:VOLT 0')

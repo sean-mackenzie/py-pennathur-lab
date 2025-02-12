@@ -108,7 +108,7 @@ def initialize_6517a(keithley_inst, nplc, set_timeout):
     keithley_inst.write(':TRAC:TST:FORM ABS')  # ABSolute: reference each timestamp to the first buffer reading, DELTa
     # -
     # Display: Enable/disable storage display (note, fastest data acquisition with front panel display disabled)
-    if nplc < 1.0:
+    if nplc < 5.0:
         keithley_inst.write(':DISP:ENAB OFF')  # Disable the front-panel display
     else:
         keithley_inst.write(':DISP:ENAB ON')  # Enable the front-panel display
@@ -178,6 +178,7 @@ def setup_6517a_sense_functions(keithley_inst, dict_sense):
     # -
     what_zero_correct = keithley_inst.query(':SYST:ZCOR?')
     print("Zero Correct: {}".format(what_zero_correct))
+
 
 def setup_6517a_test_sequence(keithley_inst, test_type, **kwargs):
     """
@@ -338,6 +339,15 @@ if __name__ == "__main__":
     # Quasi Limits
     max_buffer = 8566  # assumes timestamp and voltage included in data elements.
 
+    #TODO:
+    """
+    1. The timeout is currently determined by NPLC, but the actual minimum sampling time is more like 35 ms. 
+        So, the timeout should be set to whichever is a longer time (NPLC or 35 ms). 
+    2. It would be very helpful if I didn't need to change the number for each test. 
+        The script should search the save directory, find all similar files, identify the highest number,
+        and automatically increment the number. 
+    """
+
     # --- SETUP
     rm = pyvisa.ResourceManager()
     check_inst = False  # True False
@@ -352,21 +362,21 @@ if __name__ == "__main__":
     # ---
     # -
     # setup base directory
-    base_dir = r'C:\Users\nanolab\Box\2024\zipper_paper\Methods\Keithley-Test-Sequences'
+    base_dir = r'C:\Users\nanolab\Box\2024\zipper_paper\Methods\I-V-Resistance Measurements'
     # -
-    test_subject_id = 'nothing_on_W13-A2'
+    test_subject_id = 'C10-20pT_25nmAu'
     save_dir = os.path.join(base_dir, test_subject_id)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     # -
     # specify test sequence: SQSW, STSW, CLE, ALTP
-    test_type = 'CLE'
-    save_id = '{}_test8'.format(test_type)
+    test_type = 'ALTP'
+    save_id = '{}_test1'.format(test_type)
     dict_sense = {
         'func': "CURR",
         'auto': 'OFF',  # ON OFF
-        'rang': 20E-9,  # (200 pA, 20 mA)
-        'nplc': 0.5,  # (0.01, 10): if NPLC < 1.0, then front panel display is disabled for speed
+        'rang': 20E-3,  # (200 pA, 20 mA)
+        'nplc': 10,  # (0.01, 10): if NPLC < 1.0, then front panel display is disabled for speed
     }  # You can set both a CURR:RANG and AUTO:ON, then RANG defines the upper-bound to seek optimal range.
     integration_period = dict_sense['nplc'] / 60
     print("Integration period = {} ms".format(np.round(integration_period * 1000)))
@@ -395,20 +405,20 @@ if __name__ == "__main__":
             * Conclusion: 
                 It seems the asymmetric switching time is quasi-constant. 
         """
-        shortest_time = integration_period * 1.5
+        shortest_time = integration_period * 2
         # inputs
-        high_voltage_level = 150.0  # -1000 to 1000 volts (default: 1)
-        time_at_high_level = 2  # 0 to 9999.9 seconds (default: 1)
-        low_voltage_level = -150.0  # -1000 to 1000 volts (default: -1)
-        time_at_low_level = 2  # 0 to 9999.9 seconds (default: 1)
-        number_of_cycles = 5  # positive integer
+        high_voltage_level = 0.5  # -1000 to 1000 volts (default: 1)
+        time_at_high_level = shortest_time  # 0 to 9999.9 seconds (default: 1)
+        low_voltage_level = -0.5  # -1000 to 1000 volts (default: -1)
+        time_at_low_level = shortest_time  # 0 to 9999.9 seconds (default: 1)
+        number_of_cycles = 50  # positive integer
         # -
         # derived inputs
         num_points = number_of_cycles * 2
         cycle_time = time_at_high_level + time_at_low_level
         total_time = cycle_time * number_of_cycles
         # set PyVisa timeout
-        estimated_timeout = (total_time * 3.5) * 1000  # (ms)
+        estimated_timeout = (total_time * 3.5) * 1000 * 3  # (ms)
         # --- export settings
         dict_settings = {
             'high_voltage_level': high_voltage_level,
@@ -442,9 +452,9 @@ if __name__ == "__main__":
         """
         shortest_time = integration_period * 1.5
         # inputs
-        start_voltage = 0  # volts (default: 1)
-        stop_voltage = 250  # volts (default: 10)
-        step_voltage = 5  # volts (default: 1)
+        start_voltage = -0.5  # volts (default: 1)
+        stop_voltage = 0.5  # volts (default: 10)
+        step_voltage = 0.05  # volts (default: 1)
         step_time = shortest_time  # seconds (default: 1)
         # -
         # derived inputs
@@ -478,8 +488,8 @@ if __name__ == "__main__":
         Notes from speed test:
             * Using a time interval of 0.01, the actual per-sample time was 15 ms (which agrees with specified time).
         """
-        bias_voltage = 25  # volts (default: 1)
-        number_of_readings = 25  # integer number (default: 10)
+        bias_voltage = 0.5  # volts (default: 1)
+        number_of_readings = 50  # integer number (default: 10)
         time_interval = integration_period * 1.25  # seconds (default: 1)
         # set PyVisa timeout
         estimated_timeout = (number_of_readings * time_interval * 3.5) * 1000  # (ms)
@@ -507,13 +517,13 @@ if __name__ == "__main__":
         """
         see page 316 of manual for method to calculate accuracy and repeatability of ATLP method
         """
-        offset_voltage = 25  # volts (default: 0 V)
-        alternating_voltage = 200  # volts (default: 10 V)
+        offset_voltage = 0  # volts (default: 0 V)
+        alternating_voltage = 0.5  # volts (default: 10 V)
         measure_time = 3  # seconds (default: 15 s)
         # dwell time at each voltage (i.e., +V for 15 s, -V for 15 s, +V for 15 s, etc.)
         # NOTE: measure_time should be at least 15 seconds for 200 pA range or less.
         number_of_readings_to_discard = 3  # (default: 3)
-        number_of_readings_to_store = 3  # (default: 1)
+        number_of_readings_to_store = 1  # (default: 1)
         # -
         # set PyVisa timeout
         estimated_meas_time = \
@@ -580,15 +590,18 @@ if __name__ == "__main__":
     ax1.plot(df['timestamp'], df['measure'], '-o', label=samples_per_second)
     ax1.set_xlabel('Time (s)')
     ax1.set_ylabel(measure_units)
+    ax1.grid(alpha=0.2)
     ax1.legend(title='#/s', loc='upper right', fontsize='small')
 
     ax2.plot(df['timestamp'], df['voltage'], '-o')
     ax2.set_xlabel('Time (s)')
     ax2.set_ylabel('Voltage (V)')
+    ax2.grid(alpha=0.2)
 
     ax3.plot(df['voltage'], df['measure'], '-o')
     ax3.set_xlabel('Voltage (V)')
     ax3.set_ylabel(measure_units)
+    ax3.grid(alpha=0.2)
 
     plt.suptitle(save_id)
     plt.tight_layout()
