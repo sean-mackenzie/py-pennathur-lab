@@ -24,6 +24,23 @@ def waveform_empty(t, amplitude, frequency, offset=0):
     return np.zeros_like(t)
 
 def agilent_waveform(t, settings):
+
+    if settings['awg_mod_state'] == 'ON':
+        if settings['awg_mod_wave'] == 'SQU':
+            mod_func = waveform_square
+        elif settings['awg_mod_wave'] == 'SIN':
+            mod_func = waveform_sine
+        else:
+            mod_func = waveform_empty
+        amplitude = mod_func(
+            t=t,
+            amplitude=settings['output_volt'],
+            frequency=settings['awg_mod_freq'],
+            offset=0,
+        )
+    else:
+        amplitude = settings['output_volt']
+
     if settings['awg_wave'] == 'SQU':
         wave_func = waveform_square
     elif settings['awg_wave'] == 'SIN':
@@ -32,7 +49,7 @@ def agilent_waveform(t, settings):
         wave_func = waveform_empty
     signal = wave_func(
         t=t,
-        amplitude=settings['output_volt'],
+        amplitude=amplitude,
         frequency=settings['awg_freq'],
         offset=settings['output_dc_offset'],
     )
@@ -48,7 +65,7 @@ def plot_arbitrary_waveform_monitor_and_monitor(df, settings):
     samples_per_second = np.round(num_samples / t_f, 2)
 
     # ideal waveform
-    num_samples_ideal = int(np.round(t_f * settings['awg_freq'] * 25))
+    num_samples_ideal = int(np.round(t_f * settings['awg_freq'] * 50))
     t_ideal = np.linspace(0, t_f, num_samples_ideal, endpoint=False)
     signal_ideal = agilent_waveform(t=t_ideal, settings=settings)
 
@@ -221,7 +238,7 @@ def setup_agilent_awg(agilent_inst, settings):
     agilent_inst.write('*RST')  # Restore GPIB default
     agilent_inst.write('OUTP:LOAD ' + str(settings['awg_output_termination']))  # OUTPut:LOAD {<ohms>|INFinity|MINimum|MAXimum}
     # -
-    # waveform
+    # carrier waveform
     agilent_inst.write('FUNC ' + settings['awg_wave'])  # FUNCtion {SINusoid|SQUare|RAMP|PULSe|NOISe|DC|USER}
     agilent_inst.write('FREQ ' + str(settings['awg_freq']))  # FREQuency {<frequency>|MINimum|MAXimum}
     agilent_inst.write('VOLT ' + str(settings['awg_volt']))  # VOLTage {<amplitude>|MINimum|MAXimum}
@@ -231,19 +248,31 @@ def setup_agilent_awg(agilent_inst, settings):
     if settings['awg_wave'] == 'SQU':
         agilent_inst.write('FUNC:SQU:DCYC ' + str(settings['awg_square_duty_cycle']))  # FUNCtion:SQUare:DCYCle {<percent>|MINimum|MAXimum}
 
+    # modulating waveform
+    if settings['awg_mod_state'] == 'ON':
+        agilent_inst.write('AM:STAT ' + AWG_MOD_STATE)  # ON or OFF
+        agilent_inst.write('AM:SOUR ' + AWG_MOD_SOURCE)  # 'INTernal' or 'EXTernal'
+        agilent_inst.write('AM:INT:FUNC ' + AWG_MOD_WAVE)  # SIN, SQU, RAMP, NRAMp, TRI
+        agilent_inst.write('AM:INT:FREQ ' + str(AWG_MOD_FREQ))  # 2 mHz to 20 kHz (default: 100 Hz)
+        agilent_inst.write('AM:DEPT ' + str(AWG_MOD_DEPTH))  # 0% to 120%, where 0% = Amplitude / 2 and 100% = Amplitude
+
 
 def data_acquisition_handler(agilent_inst, keithley_inst, settings):
     # 1. Trigger the Keithley to start recording data
     keithley_inst.write(':SYST:TST:REL:RES')  # Reset relative timestamp to 0.
     keithley_inst.write(':INIT')  # Trigger voltage readings.
     # 2. Start sourcing voltage from arbitrary waveform
-    agilent_inst.write('OUTP ON')  # OUTPut {OFF|ON}
+    # agilent_inst.write('OUTP ON')  # OUTPut {OFF|ON}
     # 3. Handle periodic data acquisition
     data = []
     for i in range(settings['keithley_num_samples']):
         time.sleep(settings['keithley_fetch_delay'])
         datum = keithley_inst.query_ascii_values(':FETCh?', container=np.array)  # request data.
         data.append(datum)
+
+        if i == 0:
+            agilent_inst.write('OUTP ON')  # OUTPut {OFF|ON}
+
     # 4. Stop sourcing voltage
     agilent_inst.write('OUTP OFF')
     # 5. Return data and elements
@@ -284,25 +313,32 @@ if __name__ == "__main__":
 
     # test id
     TEST_SUBJECT = 'Test-Voltage-Monitor'
-    TID = 14
+    TID = 26
 
-    # Agilent 33210A arbitrary waveform generator
+    # --- Agilent 33210A arbitrary waveform generator
+    # carrier waveform
     AWG_WAVE = 'SQU'  # SIN, SQU, RAMP, PULS, DC
-    AWG_FREQ = 0.25  # 0.001 to 10000000
-    OUTPUT_VOLT = 100  # max bipolar: 350 V; max unipolar: 700 V
-    OUTPUT_DC_OFFSET = 50  # max: 350 V
+    AWG_FREQ = 1  # 0.001 to 10000000
+    OUTPUT_VOLT = 50  # max bipolar: 350 V; max unipolar: 700 V
+    OUTPUT_DC_OFFSET = 0  # max: 350 V
     AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
     AWG_VOLT_UNIT = 'VPP'  # VPP, VRMS
+    # modulating waveform
+    AWG_MOD_STATE = 'ON'  # ON or OFF
+    AWG_MOD_WAVE = 'SIN'  # SIN, SQU, RAMP, NRAMp, TRI
+    AWG_MOD_FREQ = 0.01  # 2 mHz to 20 kHz (default: 100 Hz)
+    AWG_MOD_DEPTH = 100  # 0% to 120%, where 0% = Amplitude / 2 and 100% = Amplitude
+    AWG_MOD_SOURCE = 'INT'  # 'INTernal' or 'EXTernal'
 
     # Keithley 6517a monitor
     K1_MONITOR = 'VOLT'  # 'CURR' or 'VOLT'
-    K1_NPLC = 10  # 0.01 to 10
-    K1_NUM_SAMPLES = 50
+    K1_NPLC = 0.2  # 0.01 to 10
+    K1_NUM_SAMPLES = 750
 
     # ---
 
     # setup directories and filenames for export
-    SAVE_ID = ('tid{}_{}_{}Hz_{}pDC_{}{}_{}VDC-offset'.format(
+    SAVE_ID = ('TEST-MOD_tid{}_{}_{}Hz_{}pDC_{}{}_{}VDC-offset'.format(
         TID, AWG_WAVE, AWG_FREQ, AWG_SQUARE_DUTY_CYCLE, OUTPUT_VOLT, AWG_VOLT_UNIT, OUTPUT_DC_OFFSET))
     SAVE_DIR = join(BASE_DIR, TEST_SUBJECT)
     if not os.path.exists(SAVE_DIR):
@@ -314,6 +350,15 @@ if __name__ == "__main__":
             output_voltage=OUTPUT_VOLT,
             dc_offset=OUTPUT_DC_OFFSET,
         )
+        if AWG_MOD_STATE == 'OFF':
+            AWG_MOD_WAVE = 'NONE'
+            AWG_MOD_FREQ = 0
+            AWG_MOD_DEPTH = 0
+            AWG_MOD_SOURCE = 'NONE'
+        elif AWG_MOD_DEPTH != 100:
+            raise ValueError("Mod depth not set up for other than 100% depth.")
+        elif AWG_MOD_FREQ > AWG_FREQ:
+            raise ValueError("Modulation frequency must be less than carrier frequency.")
         DICT_SETTINGS = {
             'tid': TID,
             'save_dir': SAVE_DIR,
@@ -326,6 +371,11 @@ if __name__ == "__main__":
             'awg_volt_unit': AWG_VOLT_UNIT,
             'awg_volt': AWG_VOLT,
             'awg_dc_offset': AWG_DC_OFFSET,
+            'awg_mod_state': AWG_MOD_STATE,
+            'awg_mod_wave': AWG_MOD_WAVE,
+            'awg_mod_freq': AWG_MOD_FREQ,
+            'awg_mod_depth': AWG_MOD_DEPTH,
+            'awg_mod_source': AWG_MOD_SOURCE,
             'awg_output_termination': AWG_OUTPUT_TERMINATION,
             'amplifier_gain': AMPLIFIER_GAIN,
             'keithley_monitor': K1_MONITOR,
