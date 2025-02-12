@@ -1,16 +1,91 @@
 import os
 from os.path import join
 import numpy as np
+from scipy import signal
 import pandas as pd
 import matplotlib.pyplot as plt
 import pyvisa
 import time
 
 
-def package_data_and_export(data, data_elements, settings, return_df):
-    df = pd.DataFrame(data, columns=data_elements.split(','))
-    df_settings = pd.DataFrame.from_dict(data=settings, orient='index')
+def waveform_square(t, amplitude, frequency, offset=0):
+    return amplitude * signal.square(2 * np.pi * frequency * t) + offset
 
+def waveform_sine(t, amplitude, frequency, offset=0):
+    return amplitude * np.sin(2 * np.pi * frequency * t) + offset
+
+def waveform_sawtooth(t, amplitude, frequency, offset=0):
+    return amplitude * signal.sawtooth(2 * np.pi * frequency * t) + offset
+
+def waveform_triangle(t, amplitude, frequency, offset=0):
+    return amplitude * signal.sawtooth(2 * np.pi * frequency * t, width=0.5) + offset
+
+def waveform_empty(t, amplitude, frequency, offset=0):
+    return np.zeros_like(t)
+
+def agilent_waveform(t, settings):
+    if settings['awg_wave'] == 'SQU':
+        wave_func = waveform_square
+    elif settings['awg_wave'] == 'SIN':
+        wave_func = waveform_sine
+    else:
+        wave_func = waveform_empty
+    signal = wave_func(
+        t=t,
+        amplitude=settings['output_volt'],
+        frequency=settings['awg_freq'],
+        offset=settings['output_dc_offset'],
+    )
+    return signal
+
+def plot_arbitrary_waveform_monitor_and_monitor(df, settings):
+    # df.columns = ['READ', 'TST', 'READ_ZCOR', 'MEAS_ZCOR']
+    px, py1, py2 = 'TST', 'READ_ZCOR', 'MEAS_ZCOR'
+
+    # sampled waveform
+    t_i, t_f = df[px].iloc[0], df[px].iloc[-1]
+    num_samples = len(df)
+    samples_per_second = np.round(num_samples / t_f, 2)
+
+    # ideal waveform
+    num_samples_ideal = int(np.round(t_f * settings['awg_freq'] * 25))
+    t_ideal = np.linspace(0, t_f, num_samples_ideal, endpoint=False)
+    signal_ideal = agilent_waveform(t=t_ideal, settings=settings)
+
+    # plot
+    fig, (ax0, ax1) = plt.subplots(nrows=2, figsize=(10, 7), sharex=True)
+
+    ax0.plot(t_ideal, signal_ideal, '-k', label='ideal')
+    ax0.set_ylabel(r'$V_{output} \: (V)$')
+    ax0.grid(alpha=0.2)
+    ax0.legend(title='waveform', loc='lower left', fontsize='small')
+
+    ax1.plot(df[px], df[py1], '-o', ms=2, label='Sampled: {} #/s'.format(samples_per_second))
+    ax1.set_xlabel('{} (s)'.format(px))
+    ax1.set_ylabel('MONITOR V ({})'.format(settings['keithley_monitor_units']))
+    ax1.grid(alpha=0.2)
+    ax1.legend(title='waveform',
+               loc='lower left', fontsize='small')
+
+    ax1r = ax1.twinx()
+    ax1r.plot(df[px], df[py2], '-o', ms=1)
+    ax1r.set_ylabel('{} ({})'.format(settings['keithley_monitor'], settings['keithley_measure_units']))
+
+    plt.suptitle(settings['save_id'])
+    plt.tight_layout()
+    plt.savefig(join(settings['save_dir'], 'fig_{}.png'.format(settings['save_id'])),
+                dpi=300, facecolor='w', bbox_inches='tight')
+    plt.show()
+    plt.close()
+
+
+def package_data_and_export(data, data_elements, settings, return_df):
+    df = pd.DataFrame(data, columns=data_elements.split(','))  # df.columns = ['READ', 'TST']
+    df['READ_ZCOR'] = df['READ'] - settings['keithley_monitor_zero_bias']
+    df['MEAS_ZCOR'] = df['READ_ZCOR'] * settings['keithley_monitor_to_measure']
+    # -
+    df_settings = pd.DataFrame.from_dict(data=settings, orient='index')
+    # -
     file = join(settings['save_dir'], '{}_data.xlsx'.format(settings['save_id']))
     sns, dfs = ['data', 'settings'], [df, df_settings]
     idx, lbls = [False, True], [None, 'k']
@@ -20,34 +95,10 @@ def package_data_and_export(data, data_elements, settings, return_df):
     if return_df:
         return df
 
-def plot_arbitrary_waveform_monitor_and_monitor(df, settings):
-    # setup
-    # df.columns = ['READ', 'TST']
-    py, px = df.columns
-
-    # sampling rate
-    dt = df[px].iloc[-1]
-    num_samples = len(df)
-    samples_per_second = np.round(num_samples / dt, 2)
-
-    # plot
-    fig, ax1 = plt.subplots()#nrows=3, figsize=(10, 10))
-    ax1.plot(df[px], df[py], '-o', ms=2, label=samples_per_second)
-    ax1.set_xlabel('{} (s)'.format(px))
-    ax1.set_ylabel(settings['keithley_measure_units'])
-    ax1.grid(alpha=0.2)
-    ax1.legend(title='#/s', loc='upper right', fontsize='small')
-    plt.suptitle(settings['save_id'])
-    plt.tight_layout()
-    plt.savefig(join(settings['save_dir'], 'fig_{}.png'.format(settings['save_id'])),
-                dpi=300, facecolor='w', bbox_inches='tight')
-    plt.show()
-    plt.close()
 
 def post_process_data(data, data_elements, settings):
     df = package_data_and_export(data, data_elements, settings, return_df=True)
     plot_arbitrary_waveform_monitor_and_monitor(df=df, settings=settings)
-
 
 
 def setup_keithley_6517_amplifier_monitor(keithley_inst, settings):
@@ -67,16 +118,25 @@ def setup_keithley_6517_amplifier_monitor(keithley_inst, settings):
     estimated_timeout = settings['keithley_num_samples'] * integration_period  # (seconds)
     print("estimated timeout: {} seconds".format(estimated_timeout))
     if settings['keithley_monitor'] == 'CURR':
-        measure_units = '1V/40mA'
+        monitor_units = '1V/40mA'
+        monitor_zero_bias = 0.0039
+        monitor_to_measure = 40e3
+        measure_units = r'$\mu$A'
     elif settings['keithley_monitor'] == 'VOLT':
-        measure_units = '1V/100V'
+        monitor_units = '1V/100V'
+        monitor_zero_bias = 0.005
+        monitor_to_measure = 100
+        measure_units = r'$V$'
     else:
         raise ValueError("Invalid monitor type.")
     keithley_settings = {
-        'keithley_measure_units': measure_units,
         'keithley_integration_period': integration_period,
         'keithley_fetch_delay': fetch_delay,
         'keithley_ratio_fetch_to_integration': ratio_fetch_to_integration,
+        'keithley_monitor_units': monitor_units,
+        'keithley_monitor_zero_bias': monitor_zero_bias,
+        'keithley_monitor_to_measure': monitor_to_measure,
+        'keithley_measure_units': measure_units,
         'keithley_timeout': estimated_timeout,
     }
     settings.update(keithley_settings)
@@ -116,7 +176,10 @@ def setup_keithley_6517_amplifier_monitor(keithley_inst, settings):
     keithley_inst.write(':SYST:ZCH ON')  # Enable (ON) or disable (OFF) zero check (default: OFF)
 
     # 4. Set up Sense functions
-    keithley_inst.write(':DISP:ENAB OFF')  # Enable or disable the front-panel display
+    if settings['keithley_nplc'] > 9.0:
+        keithley_inst.write(':DISP:ENAB ON')  # Enable or disable the front-panel display
+    else:
+        keithley_inst.write(':DISP:ENAB OFF')  # Enable or disable the front-panel display
     # Sense functions
     keithley_inst.write(':SENS:FUNC "VOLT"')  # 'VOLTage[:DC]', 'CURRent[:DC]', 'RESistance', 'CHARge' (default='VOLT:DC')
     keithley_inst.write(':SENS:VOLT:DC:GUARd OFF')  # Disable guard
@@ -137,10 +200,12 @@ def setup_keithley_6517_amplifier_monitor(keithley_inst, settings):
 
     return settings
 
+
 def required_input_to_amplifier(gain, output_voltage, dc_offset):
     req_input_volt = np.round(output_voltage / gain, 3)
     req_input_dc_offset = np.round(dc_offset / gain, 3)
     return req_input_volt, req_input_dc_offset
+
 
 def setup_agilent_awg(agilent_inst, settings):
     # -
@@ -151,52 +216,48 @@ def setup_agilent_awg(agilent_inst, settings):
     else:
         print("AWG Voltage Output: {} {} + {} DC".format(settings['awg_volt'], settings['awg_volt_unit'], settings['awg_dc_offset']))
         print("TREK Voltage Output: {} {} + {} DC".format(settings['output_volt'], settings['awg_volt_unit'], settings['output_dc_offset']))
-
-    awg.write('*RST')  # Restore GPIB default
-    # Program physical/hardware set up
-    awg.write('OUTP:LOAD ' + str(settings['awg_output_termination']))  # OUTPut:LOAD {<ohms>|INFinity|MINimum|MAXimum}
-    # NOTE 1: the input impedance of the Trek Amplifier is 90 kOhms.
-    # NOTE 2: it seems the "most appropriate" output termination for Trek is 10 kOhms.
-
-    # Program waveform
-    awg.write('FUNC ' + settings['awg_wave'])  # FUNCtion {SINusoid|SQUare|RAMP|PULSe|NOISe|DC|USER}
-    awg.write('FREQ ' + str(settings['awg_freq']))  # FREQuency {<frequency>|MINimum|MAXimum}
-    awg.write('VOLT ' + str(settings['awg_volt']))  # VOLTage {<amplitude>|MINimum|MAXimum}
-    awg.write('VOLT:OFFS ' + str(settings['awg_dc_offset']))  # VOLTage:OFFSet {<offset>|MINimum|MAXimum}
-    awg.write('VOLT:UNIT ' + settings['awg_volt_unit'])  # VOLTage:UNIT {VPP|VRMS|DBM}
-    awg.write('VOLT:RANG:AUTO ON')  # VOLTage:RANGe:AUTO {OFF|ON|ONCE}
-    if awg_wave == 'SQU':
-        awg.write('FUNC:SQU:DCYC ' + str(settings['awg_square_duty_cycle']))  # FUNCtion:SQUare:DCYCle {<percent>|MINimum|MAXimum}
+    # -
+    # system
+    agilent_inst.write('*RST')  # Restore GPIB default
+    agilent_inst.write('OUTP:LOAD ' + str(settings['awg_output_termination']))  # OUTPut:LOAD {<ohms>|INFinity|MINimum|MAXimum}
+    # -
+    # waveform
+    agilent_inst.write('FUNC ' + settings['awg_wave'])  # FUNCtion {SINusoid|SQUare|RAMP|PULSe|NOISe|DC|USER}
+    agilent_inst.write('FREQ ' + str(settings['awg_freq']))  # FREQuency {<frequency>|MINimum|MAXimum}
+    agilent_inst.write('VOLT ' + str(settings['awg_volt']))  # VOLTage {<amplitude>|MINimum|MAXimum}
+    agilent_inst.write('VOLT:OFFS ' + str(settings['awg_dc_offset']))  # VOLTage:OFFSet {<offset>|MINimum|MAXimum}
+    agilent_inst.write('VOLT:UNIT ' + settings['awg_volt_unit'])  # VOLTage:UNIT {VPP|VRMS|DBM}
+    agilent_inst.write('VOLT:RANG:AUTO ON')  # VOLTage:RANGe:AUTO {OFF|ON|ONCE}
+    if settings['awg_wave'] == 'SQU':
+        agilent_inst.write('FUNC:SQU:DCYC ' + str(settings['awg_square_duty_cycle']))  # FUNCtion:SQUare:DCYCle {<percent>|MINimum|MAXimum}
 
 
 def data_acquisition_handler(agilent_inst, keithley_inst, settings):
     # 1. Trigger the Keithley to start recording data
     keithley_inst.write(':SYST:TST:REL:RES')  # Reset relative timestamp to 0.
     keithley_inst.write(':INIT')  # Trigger voltage readings.
-
     # 2. Start sourcing voltage from arbitrary waveform
     agilent_inst.write('OUTP ON')  # OUTPut {OFF|ON}
-
     # 3. Handle periodic data acquisition
     data = []
     for i in range(settings['keithley_num_samples']):
         time.sleep(settings['keithley_fetch_delay'])
-        datum = k1.query_ascii_values(':FETCh?', container=np.array)  # request data.
+        datum = keithley_inst.query_ascii_values(':FETCh?', container=np.array)  # request data.
         data.append(datum)
-
     # 4. Stop sourcing voltage
-    awg.write('OUTP OFF')
-
+    agilent_inst.write('OUTP OFF')
     # 5. Return data and elements
     data = np.array(data)
     data_elements = keithley_inst.query(':FORMat:ELEM?').rstrip()
-
     return data, data_elements
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    # NOTE 1: the input impedance of the Trek Amplifier is 90 kOhms.
+    # NOTE 2: it seems the "most appropriate" output termination for Trek is 10 kOhms.
 
     # --- HARDWARE SETUP
     # available instruments
@@ -222,21 +283,21 @@ if __name__ == "__main__":
     BASE_DIR = r'C:\Users\nanolab\Desktop\sean\Agilent-Keithley-Andor Synchronization'
 
     # test id
-    TEST_SUBJECT = 'Test-Current-Monitor'
-    TID = 6
+    TEST_SUBJECT = 'Test-Voltage-Monitor'
+    TID = 14
 
     # Agilent 33210A arbitrary waveform generator
-    AWG_WAVE = 'SIN'  # SIN, SQU, RAMP, PULS, DC
+    AWG_WAVE = 'SQU'  # SIN, SQU, RAMP, PULS, DC
     AWG_FREQ = 0.25  # 0.001 to 10000000
-    OUTPUT_VOLT = 200  # max bipolar: 350 V; max unipolar: 700 V
-    OUTPUT_DC_OFFSET = 0  # max: 350 V
+    OUTPUT_VOLT = 100  # max bipolar: 350 V; max unipolar: 700 V
+    OUTPUT_DC_OFFSET = 50  # max: 350 V
     AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
     AWG_VOLT_UNIT = 'VPP'  # VPP, VRMS
 
     # Keithley 6517a monitor
-    K1_MONITOR = 'CURR'  # 'CURR' or 'VOLT
-    K1_NPLC = 1  # 0.01 to 10
-    K1_NUM_SAMPLES = 250
+    K1_MONITOR = 'VOLT'  # 'CURR' or 'VOLT'
+    K1_NPLC = 10  # 0.01 to 10
+    K1_NUM_SAMPLES = 50
 
     # ---
 
@@ -279,11 +340,11 @@ if __name__ == "__main__":
 
     # --- Initialize instruments
     AWG = rm.open_resource(AWG_USB)  # 'GPIB{}::{}::INSTR'.format(awg_board_index, awg_GPIB)
-    K1 = rm.open_resource('GPIB{}::{}::INSTR'.format(K1_BOARD_INDEX, k1_GPIB))
+    K1 = rm.open_resource('GPIB{}::{}::INSTR'.format(K1_BOARD_INDEX, K1_GPIB))
     # -
     # --- Program instruments
-    DICT_SETTINGS = setup_agilent_awg(agilent_inst=AWG, settings=DICT_SETTINGS)
     DICT_SETTINGS = setup_keithley_6517_amplifier_monitor(keithley_inst=K1, settings=DICT_SETTINGS)
+    setup_agilent_awg(agilent_inst=AWG, settings=DICT_SETTINGS)
     # -
     # --- Acquire data
     DATA, DATA_ELEMENTS = data_acquisition_handler(
