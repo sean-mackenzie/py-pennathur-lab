@@ -77,6 +77,9 @@ def wrapper_6517a_test_sequence(keithley_inst, test_type, dict_sense, set_timeou
     # --- INITIALIZE KEITHLEY 6517a
     initialize_6517a(keithley_inst, nplc=dict_sense['nplc'], set_timeout=set_timeout)
     # -
+    # --- PERFORM ZERO CORRECT
+    perform_6517a_zero_correct(keithley_inst)
+    # -
     # --- DEFINE TRIGGER MODEL
     setup_6517a_trigger_model(keithley_inst, num_points)
     # -
@@ -173,11 +176,9 @@ def setup_6517a_sense_functions(keithley_inst, dict_sense):
     # -
     # keithley_inst.write(':SYST:ZCOR:ACQ')  # Acquire zero correction value (could not get this function to work)
     # disable zero check and turn on zero correct after switching and before making measurement
-    keithley_inst.write(':SYST:ZCH OFF')  # Enable (ON) or disable (OFF) zero check (default: OFF)
     keithley_inst.write(':SYST:ZCOR ON')  # Enable (ON) or disable (OFF) zero correct (default: OFF)
-    # -
-    what_zero_correct = keithley_inst.query(':SYST:ZCOR?')
-    print("Zero Correct: {}".format(what_zero_correct))
+    # see page 79-81 of manual for zero correct procedure
+
 
 
 def setup_6517a_test_sequence(keithley_inst, test_type, **kwargs):
@@ -199,7 +200,7 @@ def setup_6517a_test_sequence(keithley_inst, test_type, **kwargs):
         time_at_low_level = kwargs['time_at_low_level']
         number_of_cycles = kwargs['number_of_cycles']
 
-        keithley_inst.write(':SOUR:VOLT:RANG ' + str(high_voltage_level))  # Define voltage range: <= 100: 100V, >100: 1000 V range (default: 100 V)
+        keithley_inst.write(':SOUR:VOLT:RANG ' + str(high_voltage_level))  # range: <=100:100V, >100:1000V (default: 100 V)
         keithley_inst.write(':SOUR:VOLT:LIM ' + str(high_voltage_level))  # Define voltage limit: 0 to 1000 V (default: 1000 V)
 
         keithley_inst.write(":TSEQ:SQSW:HLEV " + str(high_voltage_level))  # -1000 to 1000 V
@@ -214,8 +215,7 @@ def setup_6517a_test_sequence(keithley_inst, test_type, **kwargs):
         step_time = kwargs['step_time']
 
         max_voltage = np.max(np.abs(np.array([start_voltage, stop_voltage])))
-        keithley_inst.write(':SOUR:VOLT:RANG ' + str(
-            max_voltage))  # Define voltage range: <= 100: 100V, >100: 1000 V range (default: 100 V)
+        keithley_inst.write(':SOUR:VOLT:RANG ' + str(max_voltage))  # range: <=100:100V, >100:1000V (default: 100 V)
         keithley_inst.write(':SOUR:VOLT:LIM ' + str(max_voltage))  # Define voltage limit: 0 to 1000 V (default: 1000 V)
 
         keithley_inst.write(":TSEQ:STSW:STARt " + str(start_voltage))  # -1000 to 1000 V
@@ -274,6 +274,17 @@ def setup_6517a_test_sequence(keithley_inst, test_type, **kwargs):
 
 
 def perform_6517a_test_sequence(keithley_inst, test_type, **kwargs):
+    # - Turn zero check off only immediately before test (i.e., after specifying all functions)
+    # see page 79-81 of manual for zero correct procedure
+    keithley_inst.write(':SYST:ZCH OFF')  # Enable (ON) or disable (OFF) zero check (default: OFF)
+    time.sleep(0.05)
+    keithley_inst.write(':SYST:ZCOR ON')  # Enable (ON) or disable (OFF) zero correct (default: OFF)
+    time.sleep(0.1)
+    what_zero_correct = keithley_inst.query(':SYST:ZCOR?')
+    print("Zero Correct: {}".format(what_zero_correct))
+
+    # ---
+
     # - Start test sequence
     keithley_inst.write("TSEQ:ARM")  # Arm the selected test sequence
 
@@ -308,6 +319,31 @@ def perform_6517a_test_sequence(keithley_inst, test_type, **kwargs):
         print(data)
 
     return data
+
+
+def perform_6517a_zero_correct(keithley_inst):
+    # see page 79-81 of manual for zero correct procedure (example on page 57)
+    keithley_inst.write(':SYST:ZCH ON')  # Enable (ON) or disable (OFF) zero check (default: OFF)
+    # Set up Source functions
+    keithley_inst.write(':SOUR:VOLT 0')  # Define voltage level: -1000 to +1000 V (default: 0)
+    keithley_inst.write(':SOUR:VOLT:RANG 1000')  # <100=100V, >100=1000V
+    keithley_inst.write(':SOUR:VOLT:LIM 1000')  # Define voltage limit: 0 to 1000 V (default: 1000 V)
+    # Set up Sense functions
+    keithley_inst.write(':SENS:FUNC "CURR"')  # 'VOLTage[:DC]', 'CURRent[:DC]', 'RESistance', 'CHARge' (default='VOLT:DC')
+    keithley_inst.write(':SENS:CURR:RANG:AUTO OFF')  # Enable (ON) or disable (OFF) autorange
+    keithley_inst.write(':SENS:CURR:RANG 2E-12')  # Select current range: 0 to 20e-3 (default = 20e-3)
+    # k3.write(':SENS:CURR:REF 0')  # Specify reference: -20e-3 to 20e-3) (default: 0)
+    keithley_inst.write(':SYST:ZCH OFF')  # Enable (ON) or disable (OFF) zero check (default: OFF)
+    # Execute configured measurement
+    keithley_inst.write('OUTP ON')  # Turn source ON
+    # k3.write(':INIT')  # Move from IDLE state to ARM Layer 1
+    # k3.write(':SOUR:VOLT 0')  # Set voltage level to 0
+    time.sleep(0.5)
+    keithley_inst.write(':SYST:ZCOR:ACQ')  # Acquire zero correction value (could not get this function to work)
+    time.sleep(0.5)
+    # keithley_inst.write(':SYST:ZCOR ON')  # Enable (ON) or disable (OFF) zero correct (default: OFF)
+    keithley_inst.write(':OUTP OFF')  # turn output off
+    keithley_inst.write(':SYST:ZCH ON')  # Enable (ON) or disable (OFF) zero check (default: OFF)
 
 
 if __name__ == "__main__":
@@ -561,6 +597,9 @@ if __name__ == "__main__":
         # NOTE: use command :TRAC:LAST? to read the last reading stored in buffer (applies only to ALTP test)
     else:
         raise ValueError("Only 'SQSW', 'STSW', 'CLE', and 'ALTP' test are implemented.")
+    # -
+    # --- UNKNOWN HOW IMPORTANT THIS IS
+    # k3.close()  # close instrument
     # -
     # --- parse, package, and export
     data_elements = k1.query(':FORMat:ELEM?')
