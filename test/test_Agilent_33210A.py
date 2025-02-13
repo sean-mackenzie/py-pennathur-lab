@@ -7,6 +7,27 @@ import matplotlib.pyplot as plt
 import pyvisa
 import time
 
+def append_reverse(arr, single_point_max):
+    """
+    Append a NumPy array to itself in reverse order.
+    """
+    reversed_arr = arr[::-1]
+    if single_point_max is True:
+        reversed_arr = reversed_arr[1:]
+    appended_arr = np.concatenate((arr, reversed_arr))
+    return appended_arr
+
+def repeat_n_cycles(arr, n, join_smooth=False):
+    if join_smooth:
+        arr_cycles = np.tile(arr[:-1], n)
+        arr_cycles = np.append(arr_cycles, arr[-1])
+    else:
+        arr_cycles = np.tile(arr, n)
+    return arr_cycles
+
+def replace_amplitude_if_out_of_range(arr, min_amplitude):
+    arr = np.where(arr < min_amplitude, min_amplitude, arr)
+    return arr
 
 def waveform_square(t, amplitude, frequency, offset=0):
     return amplitude * signal.square(2 * np.pi * frequency * t) + offset
@@ -54,6 +75,7 @@ def agilent_waveform(t, settings):
         offset=settings['output_dc_offset'],
     )
     return signal
+
 
 def plot_arbitrary_waveform_monitor_and_monitor(df, settings):
     # df.columns = ['READ', 'TST', 'READ_ZCOR', 'MEAS_ZCOR']
@@ -116,6 +138,19 @@ def package_data_and_export(data, data_elements, settings, return_df):
 def post_process_data(data, data_elements, settings):
     df = package_data_and_export(data, data_elements, settings, return_df=True)
     plot_arbitrary_waveform_monitor_and_monitor(df=df, settings=settings)
+
+
+def setup_2410_trigger(keithley_inst):
+    if keithley_inst is not None:
+        keithley_inst.write('*RST')  # Restore GPIB default
+        keithley_inst.write(':DISP:ENAB ON')  # ON or OFF: turn off the display for faster processing
+        keithley_inst.write('ROUT:TERM REAR')  # FRONt or REAR: use front or rear terminals
+        keithley_inst.write(':SOUR:FUNC VOLT')  # Volts source function.
+        keithley_inst.write(':SOUR:DEL 0')  # Specify settling time
+        keithley_inst.write(':SOUR:VOLT:MODE FIX')  # List volts sweep mode.
+        keithley_inst.write(':SOUR:VOLT:RANG 5')  # Select V-source range (n = range).
+        keithley_inst.write(':SOUR:VOLT:PROT 5')  # Select V-source range (n = range).
+        keithley_inst.write(':SOUR:VOLT 4')  # Specify source voltage
 
 
 def setup_keithley_6517_amplifier_monitor(keithley_inst, settings):
@@ -218,15 +253,20 @@ def setup_keithley_6517_amplifier_monitor(keithley_inst, settings):
     return settings
 
 
-def required_input_to_amplifier(gain, output_voltage, dc_offset):
+def required_input_to_amplifier(gain, output_voltage, dc_offset=None):
     req_input_volt = np.round(output_voltage / gain, 3)
-    req_input_dc_offset = np.round(dc_offset / gain, 3)
-    return req_input_volt, req_input_dc_offset
+    if dc_offset is None:
+        return req_input_volt
+    else:
+        req_input_dc_offset = np.round(dc_offset / gain, 3)
+        return req_input_volt, req_input_dc_offset
 
 
 def setup_agilent_awg(agilent_inst, settings):
     # -
-    if settings['awg_volt'] + settings['awg_dc_offset'] > 18:
+    if settings['awg_mod_ampl_ext'] == 'ON' and settings['awg_mod_state'] == 'ON':
+        raise ValueError('Cannot use external and internal amplitude modulation simultaneously.')
+    elif settings['awg_volt'] + settings['awg_dc_offset'] > 18:
         raise ValueError("AWG max Vpp + Voffset is 20.")
     elif settings['awg_volt'] > 18:
         raise ValueError("AWG max Vpp is 20.")
@@ -237,16 +277,25 @@ def setup_agilent_awg(agilent_inst, settings):
     # system
     agilent_inst.write('*RST')  # Restore GPIB default
     agilent_inst.write('OUTP:LOAD ' + str(settings['awg_output_termination']))  # OUTPut:LOAD {<ohms>|INFinity|MINimum|MAXimum}
+    agilent_inst.write('OUTP:SYNC OFF')  # Disabling output sync reduces output distortion
+
     # -
     # carrier waveform
     agilent_inst.write('FUNC ' + settings['awg_wave'])  # FUNCtion {SINusoid|SQUare|RAMP|PULSe|NOISe|DC|USER}
     agilent_inst.write('FREQ ' + str(settings['awg_freq']))  # FREQuency {<frequency>|MINimum|MAXimum}
-    agilent_inst.write('VOLT ' + str(settings['awg_volt']))  # VOLTage {<amplitude>|MINimum|MAXimum}
-    agilent_inst.write('VOLT:OFFS ' + str(settings['awg_dc_offset']))  # VOLTage:OFFSet {<offset>|MINimum|MAXimum}
     agilent_inst.write('VOLT:UNIT ' + settings['awg_volt_unit'])  # VOLTage:UNIT {VPP|VRMS|DBM}
-    agilent_inst.write('VOLT:RANG:AUTO ON')  # VOLTage:RANGe:AUTO {OFF|ON|ONCE}
     if settings['awg_wave'] == 'SQU':
         agilent_inst.write('FUNC:SQU:DCYC ' + str(settings['awg_square_duty_cycle']))  # FUNCtion:SQUare:DCYCle {<percent>|MINimum|MAXimum}
+
+    # external amplitude modulation
+    if settings['awg_mod_ampl_ext'] == 'ON':
+        agilent_inst.write('VOLT ' + str(np.max(settings['awg_mod_ampl_values'])))  # VOLTage {<amplitude>|MINimum|MAXimum}
+        agilent_inst.write('VOLT:RANG:AUTO OFF')  # VOLTage:RANGe:AUTO {OFF|ON|ONCE}
+        agilent_inst.write('VOLT ' + str(settings['awg_mod_ampl_values'][0]))  # VOLTage {<amplitude>|MINimum|MAXimum}
+    else:
+        agilent_inst.write('VOLT ' + str(settings['awg_volt']))  # VOLTage {<amplitude>|MINimum|MAXimum}
+        agilent_inst.write('VOLT:OFFS ' + str(settings['awg_dc_offset']))  # VOLTage:OFFSet {<offset>|MINimum|MAXimum}
+        agilent_inst.write('VOLT:RANG:AUTO ON')  # VOLTage:RANGe:AUTO {OFF|ON|ONCE}
 
     # modulating waveform
     if settings['awg_mod_state'] == 'ON':
@@ -257,24 +306,61 @@ def setup_agilent_awg(agilent_inst, settings):
         agilent_inst.write('AM:DEPT ' + str(AWG_MOD_DEPTH))  # 0% to 120%, where 0% = Amplitude / 2 and 100% = Amplitude
 
 
-def data_acquisition_handler(agilent_inst, keithley_inst, settings):
+def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst=None):
+    # 0. Trigger Andor camera via trigger instrument
+    if trigger_inst is not None:
+        trigger_inst.write('OUTP ON')
+        time.sleep(0.25)
+        trigger_inst.write(':INIT')
     # 1. Trigger the Keithley to start recording data
     keithley_inst.write(':SYST:TST:REL:RES')  # Reset relative timestamp to 0.
     keithley_inst.write(':INIT')  # Trigger voltage readings.
     # 2. Start sourcing voltage from arbitrary waveform
-    # agilent_inst.write('OUTP ON')  # OUTPut {OFF|ON}
+    time.sleep(settings['delay_agilent_after_andor'])
+    agilent_inst.write('OUTP ON')  # OUTPut {OFF|ON}
     # 3. Handle periodic data acquisition
-    data = []
-    for i in range(settings['keithley_num_samples']):
-        time.sleep(settings['keithley_fetch_delay'])
-        datum = keithley_inst.query_ascii_values(':FETCh?', container=np.array)  # request data.
-        data.append(datum)
+    # external amplitude modulation
+    counts = 0
+    if settings['awg_mod_ampl_ext'] == 'ON':
+        awg_voltages = repeat_n_cycles(
+            arr=settings['awg_mod_ampl_values'],
+            n=settings['awg_mod_ampl_cycles'],
+            join_smooth=True,
+        )
 
-        if i == 0:
-            agilent_inst.write('OUTP ON')  # OUTPut {OFF|ON}
+        def _data_acquisition_handler_loop(time_last_meas, data_list, meas_counter):
+            if time.time() > time_last_meas + settings['keithley_fetch_delay'] and meas_counter < settings['keithley_num_samples']:
+                    data_list.append(keithley_inst.query_ascii_values(':FETCh?', container=np.array))
+                    time_last_meas = time.time()
+                    meas_counter += 1
+            return time_last_meas, data_list, meas_counter
+
+        time_meas = time.time()
+        data = []
+        counts = 0
+        for v in awg_voltages:
+            agilent_inst.write('VOLT ' + str(v))  # VOLTage
+            tic = time.time()
+            print("Time Elapsed: {} s, {} V".format(tic - time_meas, v))
+            while time.time() < tic + settings['awg_mod_ampl_dwell']:
+                time_meas, data, counts = _data_acquisition_handler_loop(
+                    time_last_meas=time_meas, data_list=data, meas_counter=counts,
+                )
+    else:
+        data = []
+        for counts in range(settings['keithley_num_samples']):
+            datum = keithley_inst.query_ascii_values(':FETCh?', container=np.array)  # request data.
+            data.append(datum)
+            time.sleep(settings['keithley_fetch_delay'])
 
     # 4. Stop sourcing voltage
     agilent_inst.write('OUTP OFF')
+    if counts < settings['keithley_num_samples']:
+        keithley_inst.write(':ABORt')
+        # keithley_inst.write('OUTP OFF')
+    if trigger_inst is not None:
+        trigger_inst.write(':SOUR:VOLT 0')
+        trigger_inst.write('OUTP OFF')
     # 5. Return data and elements
     data = np.array(data)
     data_elements = keithley_inst.query(':FORMat:ELEM?').rstrip()
@@ -300,8 +386,12 @@ if __name__ == "__main__":
     AWG_USB = 'USB0::0x0957::0x1507::MY48003320::INSTR'  # or, AWG_GPIB, AWG_BOARD_INDEX = 10, 0
     AMPLIFIER_GAIN = 50
     AWG_OUTPUT_TERMINATION = '10E3'
-    # Keithley 6517 electrometer
+    AWG_MIN_ALLOWABLE_AMPLITUDE = 0.355  # NOTE: actual min amplitude for 10E3 output termination is 112 mV.
+    OUTPUT_MIN_POSSIBLE_AMPLITUDE = AWG_MIN_ALLOWABLE_AMPLITUDE * AMPLIFIER_GAIN
+    # Keithley 6517 electrometer used as voltage or current monitor of Trek amplifier output
     K1_GPIB, K1_BOARD_INDEX = 24, 0
+    # Keithley 2410 used to trigger Andor camera
+    K2_TRIGGER_GPIB, K2_TRIGGER_BOARD_INDEX = 25, 1
 
     # ------------------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
@@ -312,28 +402,41 @@ if __name__ == "__main__":
     BASE_DIR = r'C:\Users\nanolab\Desktop\sean\Agilent-Keithley-Andor Synchronization'
 
     # test id
-    TEST_SUBJECT = 'Test-Voltage-Monitor'
-    TID = 26
+    TEST_SUBJECT = 'Test-AndorSynchronization+TrekVoltageMonitor'
+    TID = 9
 
+    # --- --- SETUP INSTRUMENTS
     # --- Agilent 33210A arbitrary waveform generator
     # carrier waveform
     AWG_WAVE = 'SQU'  # SIN, SQU, RAMP, PULS, DC
-    AWG_FREQ = 1  # 0.001 to 10000000
-    OUTPUT_VOLT = 50  # max bipolar: 350 V; max unipolar: 700 V
+    AWG_FREQ = 5  # 0.001 to 10000000
+    OUTPUT_VOLT = 100  # max bipolar: 350 V; max unipolar: 700 V
     OUTPUT_DC_OFFSET = 0  # max: 350 V
     AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
     AWG_VOLT_UNIT = 'VPP'  # VPP, VRMS
     # modulating waveform
-    AWG_MOD_STATE = 'ON'  # ON or OFF
+    AWG_MOD_STATE = 'OFF'  # ON or OFF
     AWG_MOD_WAVE = 'SIN'  # SIN, SQU, RAMP, NRAMp, TRI
     AWG_MOD_FREQ = 0.01  # 2 mHz to 20 kHz (default: 100 Hz)
     AWG_MOD_DEPTH = 100  # 0% to 120%, where 0% = Amplitude / 2 and 100% = Amplitude
     AWG_MOD_SOURCE = 'INT'  # 'INTernal' or 'EXTernal'
-
+    # external amplitude modulation
+    AWG_MOD_AMPL_EXT = 'ON'
+    AWG_MOD_AMPL_SHAPE = 'STAIR'
+    AWG_MOD_AMPL_START = 0  # Volts
+    AWG_MOD_AMPL_STEP = 50  # Volts
+    AWG_MOD_AMPL_STOP = 150  # Volts
+    AWG_MOD_AMPL_DWELL = 1.5  # seconds
+    AWG_MOD_AMPL_CYCLES = 1
+    # ---
     # Keithley 6517a monitor
     K1_MONITOR = 'VOLT'  # 'CURR' or 'VOLT'
-    K1_NPLC = 0.2  # 0.01 to 10
-    K1_NUM_SAMPLES = 750
+    K1_NPLC = 0.12  # 0.01 to 10
+    K1_NUM_SAMPLES = 1000
+    # ---
+    # Keithley 2410 trigger Andor camera
+    K2_INST = 2410  # None, 2410, 6517
+    DELAY_AGILENT_AFTER_ANDOR = 0.5  # seconds
 
     # ---
 
@@ -359,6 +462,20 @@ if __name__ == "__main__":
             raise ValueError("Mod depth not set up for other than 100% depth.")
         elif AWG_MOD_FREQ > AWG_FREQ:
             raise ValueError("Modulation frequency must be less than carrier frequency.")
+        if AWG_MOD_AMPL_EXT == 'OFF':
+            AWG_MOD_AMPL_SHAPE = 'NONE'
+            AWG_MOD_AMPL_START = 0.0
+            AWG_MOD_AMPL_STEP = 0.0
+            AWG_MOD_AMPL_STOP = 0.0
+            AWG_MOD_AMPL_CYCLES = 0.0
+            AWG_MOD_AMPL_VALUES = 'NONE'
+        else:
+            start = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_START)
+            stop = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_STOP)
+            step = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_STEP)
+            values = np.arange(start, stop + step / 4, step)
+            values = replace_amplitude_if_out_of_range(arr=values, min_amplitude=AWG_MIN_ALLOWABLE_AMPLITUDE)
+            AWG_MOD_AMPL_VALUES = append_reverse(values, single_point_max=True)
         DICT_SETTINGS = {
             'tid': TID,
             'save_dir': SAVE_DIR,
@@ -376,11 +493,23 @@ if __name__ == "__main__":
             'awg_mod_freq': AWG_MOD_FREQ,
             'awg_mod_depth': AWG_MOD_DEPTH,
             'awg_mod_source': AWG_MOD_SOURCE,
+            'awg_mod_ampl_ext': AWG_MOD_AMPL_EXT,
+            'awg_mod_ampl_shape': AWG_MOD_AMPL_SHAPE,
+            'awg_mod_ampl_start': AWG_MOD_AMPL_START,
+            'awg_mod_ampl_step': AWG_MOD_AMPL_STEP,
+            'awg_mod_ampl_stop': AWG_MOD_AMPL_STOP,
+            'awg_mod_ampl_dwell': AWG_MOD_AMPL_DWELL,
+            'awg_mod_ampl_cycles': AWG_MOD_AMPL_CYCLES,
+            'awg_mod_ampl_values': AWG_MOD_AMPL_VALUES,
             'awg_output_termination': AWG_OUTPUT_TERMINATION,
             'amplifier_gain': AMPLIFIER_GAIN,
+            'awg_min_allowable_amplitude': AWG_MIN_ALLOWABLE_AMPLITUDE,
+            'output_min_possible_amplitude': OUTPUT_MIN_POSSIBLE_AMPLITUDE,
             'keithley_monitor': K1_MONITOR,
             'keithley_nplc': K1_NPLC,
             'keithley_num_samples': K1_NUM_SAMPLES,
+            'andor_trigger_keithley': K2_INST,
+            'delay_agilent_after_andor': DELAY_AGILENT_AFTER_ANDOR,
         }
     else:
         raise ValueError("Must define tid.")
@@ -391,8 +520,15 @@ if __name__ == "__main__":
     # --- Initialize instruments
     AWG = rm.open_resource(AWG_USB)  # 'GPIB{}::{}::INSTR'.format(awg_board_index, awg_GPIB)
     K1 = rm.open_resource('GPIB{}::{}::INSTR'.format(K1_BOARD_INDEX, K1_GPIB))
+    if K2_INST == 2410:
+        K2 = rm.open_resource('GPIB{}::{}::INSTR'.format(K2_TRIGGER_BOARD_INDEX, K2_TRIGGER_GPIB))
+    elif K2_INST == 6517:
+        raise ValueError("Invalid instrument number. Keithley 6517 trigger code not implemented.")
+    else:
+        K2 = None
     # -
     # --- Program instruments
+    setup_2410_trigger(keithley_inst=K2)
     DICT_SETTINGS = setup_keithley_6517_amplifier_monitor(keithley_inst=K1, settings=DICT_SETTINGS)
     setup_agilent_awg(agilent_inst=AWG, settings=DICT_SETTINGS)
     # -
@@ -401,6 +537,7 @@ if __name__ == "__main__":
         agilent_inst=AWG,
         keithley_inst=K1,
         settings=DICT_SETTINGS,
+        trigger_inst=K2,
     )
     # -
     # - Post-process data and save
