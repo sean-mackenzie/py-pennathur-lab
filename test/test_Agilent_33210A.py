@@ -17,6 +17,21 @@ def append_reverse(arr, single_point_max):
     appended_arr = np.concatenate((arr, reversed_arr))
     return appended_arr
 
+def visualize_staircase_levels(sampled_time, sampled_levels, leading_edge, slew_rate=0.001):
+    # add time points to show V(t) in between current sampling times
+    if leading_edge is True:
+        t_steps = sampled_time[1:] - slew_rate
+        l_steps = sampled_levels[:-1]
+    else:
+        t_steps = sampled_time[:-1] + slew_rate
+        l_steps = sampled_levels[1:]
+    # concat
+    stair_time = np.concatenate((t_steps, sampled_time))
+    stair_levels = np.concatenate((l_steps, sampled_levels))
+    # sort by time
+    stair_time, stair_levels = list(zip(*sorted(zip(stair_time, stair_levels))))
+    return stair_time, stair_levels
+
 def repeat_n_cycles(arr, n, join_smooth=False):
     if join_smooth:
         arr_cycles = np.tile(arr[:-1], n)
@@ -77,13 +92,21 @@ def agilent_waveform(t, settings):
     return signal
 
 
-def plot_arbitrary_waveform_monitor_and_monitor(df, settings):
-    # df.columns = ['READ', 'TST', 'READ_ZCOR', 'MEAS_ZCOR']
+def plot_arbitrary_waveform_monitor_and_monitor(df_in, df_out, settings):
+    # df_in.columns = ['awg_volt', 'dt']
+    pxi, pyi = 'dt', 'awg_volt'
+    # df_out.columns = ['READ', 'TST', 'READ_ZCOR', 'MEAS_ZCOR']
     px, py1, py2 = 'TST', 'READ_ZCOR', 'MEAS_ZCOR'
 
+    # input amplitude
+    inp_t, inp_v = visualize_staircase_levels(
+        sampled_time=df_in[pxi], sampled_levels=df_in[pyi],
+        leading_edge=True, slew_rate=0.001,
+    )
+
     # sampled waveform
-    t_i, t_f = df[px].iloc[0], df[px].iloc[-1]
-    num_samples = len(df)
+    t_i, t_f = df_out[px].iloc[0], df_out[px].iloc[-1]
+    num_samples = len(df_out)
     samples_per_second = np.round(num_samples / t_f, 2)
 
     # ideal waveform
@@ -92,23 +115,31 @@ def plot_arbitrary_waveform_monitor_and_monitor(df, settings):
     signal_ideal = agilent_waveform(t=t_ideal, settings=settings)
 
     # plot
-    fig, (ax0, ax1) = plt.subplots(nrows=2, figsize=(10, 7), sharex=True)
+    fig, (ax0, ax1, ax2) = plt.subplots(nrows=3, figsize=(10, 10), sharex=True)
 
-    ax0.plot(t_ideal, signal_ideal, '-k', label='ideal')
-    ax0.set_ylabel(r'$V_{output} \: (V)$')
+    ax0.plot(t_ideal, signal_ideal, '-', color='gray', label='ideal')
+    ax0.set_ylabel(r'$V_{output, max} \: (V)$')
     ax0.grid(alpha=0.2)
-    ax0.legend(title='waveform', loc='lower left', fontsize='small')
+    ax0.legend(title='carrier waveform', loc='upper left', fontsize='small')
 
-    ax1.plot(df[px], df[py1], '-o', ms=2, label='Sampled: {} #/s'.format(samples_per_second))
-    ax1.set_xlabel('{} (s)'.format(px))
-    ax1.set_ylabel('MONITOR V ({})'.format(settings['keithley_monitor_units']))
+    ax1.plot(inp_t, inp_v, '-', color='gray', label='Dwell time')
+    ax1.plot(df_in[pxi], df_in[pyi], 'o', ms=3, color='tab:red', label='Set time')
+    ax1.set_ylabel(r'$V_{input, AWG} \: (V)$')
     ax1.grid(alpha=0.2)
-    ax1.legend(title='waveform',
-               loc='lower left', fontsize='small')
+    ax1.legend(title='amplitude modulation', loc='upper left', fontsize='small')
 
-    ax1r = ax1.twinx()
-    ax1r.plot(df[px], df[py2], '-o', ms=1)
-    ax1r.set_ylabel('{} ({})'.format(settings['keithley_monitor'], settings['keithley_measure_units']))
+    ax2.plot(df_out[px], df_out[py1], 'o', ms=2, color='tab:blue', label='Sampled: {} #/s'.format(samples_per_second))
+    ax2.plot(df_out[px], df_out[py1], '-', lw=1, color='tab:blue', alpha=0.7)
+    # ax1.set_xlabel('{} (s)'.format(px))
+    ax2.set_xlabel('Mixed Machine Time (s)')
+    ax2.set_ylabel('MONITOR V ({})'.format(settings['keithley_monitor_units']))
+    ax2.grid(alpha=0.2)
+    ax2.legend(title='modulated waveform', loc='upper left', fontsize='small')
+
+    ax2r = ax2.twinx()
+    ax2r.plot(df_out[px], df_out[py1], 'o', ms=2, color='tab:blue')
+    ax2r.set_ylabel('{} ({})'.format(settings['keithley_monitor'], settings['keithley_measure_units']),
+                    color='tab:blue')
 
     plt.suptitle(settings['save_id'])
     plt.tight_layout()
@@ -118,29 +149,33 @@ def plot_arbitrary_waveform_monitor_and_monitor(df, settings):
     plt.close()
 
 
-def package_data_and_export(data, data_elements, settings, return_df):
-    df = pd.DataFrame(data, columns=data_elements.split(','))  # df.columns = ['READ', 'TST']
-    df['READ_ZCOR'] = df['READ'] - settings['keithley_monitor_zero_bias']
-    df['MEAS_ZCOR'] = df['READ_ZCOR'] * settings['keithley_monitor_to_measure']
+def package_data_and_export(data_input, data_output, data_elements, settings, return_df):
+    df_in = pd.DataFrame(data_input, columns=['awg_volt', 'dt'])
+    df_out = pd.DataFrame(data_output, columns=data_elements.split(','))  # data_elements = ['READ', 'TST']
+    df_out['READ_ZCOR'] = df_out['READ'] - settings['keithley_monitor_zero_bias']
+    df_out['MEAS_ZCOR'] = df_out['READ_ZCOR'] * settings['keithley_monitor_to_measure']
     # -
     df_settings = pd.DataFrame.from_dict(data=settings, orient='index')
     # -
     file = join(settings['save_dir'], '{}_data.xlsx'.format(settings['save_id']))
-    sns, dfs = ['data', 'settings'], [df, df_settings]
+    sns, dfs = ['data_input', 'data_output', 'settings'], [df_in, df_out, df_settings]
     idx, lbls = [False, True], [None, 'k']
     with pd.ExcelWriter(file) as writer:
         for sheet_name, dataframe, idx, idx_lbl in zip(sns, dfs, idx, lbls):
             dataframe.to_excel(writer, sheet_name=sheet_name, index=idx, index_label=idx_lbl)
     if return_df:
-        return df
+        return df_in, df_out
 
 
-def post_process_data(data, data_elements, settings):
-    df = package_data_and_export(data, data_elements, settings, return_df=True)
-    plot_arbitrary_waveform_monitor_and_monitor(df=df, settings=settings)
+def post_process_data(data_input, data_output, data_elements, settings):
+    df_in, df_out = package_data_and_export(data_input, data_output, data_elements, settings, return_df=True)
+    plot_arbitrary_waveform_monitor_and_monitor(df_in=df_in, df_out=df_out, settings=settings)
 
 
 def setup_2410_trigger(keithley_inst):
+    current_protection = 1e-3
+    current_range = 1e-3
+    nplc = 0.01
     if keithley_inst is not None:
         keithley_inst.write('*RST')  # Restore GPIB default
         keithley_inst.write(':DISP:ENAB ON')  # ON or OFF: turn off the display for faster processing
@@ -151,6 +186,11 @@ def setup_2410_trigger(keithley_inst):
         keithley_inst.write(':SOUR:VOLT:RANG 5')  # Select V-source range (n = range).
         keithley_inst.write(':SOUR:VOLT:PROT 5')  # Select V-source range (n = range).
         keithley_inst.write(':SOUR:VOLT 4')  # Specify source voltage
+
+        keithley_inst.write(':SENS:FUNC "CURR:DC"')  # Current sense function.
+        keithley_inst.write(':SENS:CURR:PROT %g' % current_protection)  # 1 mA current compliance.
+        keithley_inst.write(':SENS:CURR:RANG %g' % current_range)  # 1 mA current compliance.
+        keithley_inst.write(':SENS:CURR:NPLC %g' % nplc)  # Specify integration rate (in line cycles): [0.01 to 10E3] (default = 1)
 
 
 def setup_keithley_6517_amplifier_monitor(keithley_inst, settings):
@@ -335,22 +375,32 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
                     meas_counter += 1
             return time_last_meas, data_list, meas_counter
 
-        time_meas = time.time()
-        data = []
+        data_input = []
+        data_output = []
         counts = 0
-        for v in awg_voltages:
+        time_init = time.time()
+        time_meas = time_init
+        trigger_voltages = np.tile(np.array([0, 4]), reps=len(awg_voltages))
+        for v, tv in zip(awg_voltages, trigger_voltages):
+            trigger_inst.write(':SOUR:VOLT ' + str(tv))  # Specify trigger source voltage
+
+            time_elapsed = time_meas - time_init
+            data_input.append([v, time_elapsed])
+            print("Time Elapsed: {} s, {} V".format(time_elapsed, v))
+
             agilent_inst.write('VOLT ' + str(v))  # VOLTage
             tic = time.time()
-            print("Time Elapsed: {} s, {} V".format(tic - time_meas, v))
+
             while time.time() < tic + settings['awg_mod_ampl_dwell']:
-                time_meas, data, counts = _data_acquisition_handler_loop(
-                    time_last_meas=time_meas, data_list=data, meas_counter=counts,
+                time_meas, data_output, counts = _data_acquisition_handler_loop(
+                    time_last_meas=time_meas, data_list=data_output, meas_counter=counts,
                 )
     else:
-        data = []
+        data_input = []
+        data_output = []
         for counts in range(settings['keithley_num_samples']):
             datum = keithley_inst.query_ascii_values(':FETCh?', container=np.array)  # request data.
-            data.append(datum)
+            data_output.append(datum)
             time.sleep(settings['keithley_fetch_delay'])
 
     # 4. Stop sourcing voltage
@@ -362,9 +412,10 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
         trigger_inst.write(':SOUR:VOLT 0')
         trigger_inst.write('OUTP OFF')
     # 5. Return data and elements
-    data = np.array(data)
+    data_input = np.array(data_input)
+    data_output = np.array(data_output)
     data_elements = keithley_inst.query(':FORMat:ELEM?').rstrip()
-    return data, data_elements
+    return data_input, data_output, data_elements
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -402,14 +453,14 @@ if __name__ == "__main__":
     BASE_DIR = r'C:\Users\nanolab\Desktop\sean\Agilent-Keithley-Andor Synchronization'
 
     # test id
-    TEST_SUBJECT = 'Test-AndorSynchronization+TrekVoltageMonitor'
-    TID = 9
+    TEST_SUBJECT = 'Characterize-Synchronization'
+    TID = 5
 
     # --- --- SETUP INSTRUMENTS
     # --- Agilent 33210A arbitrary waveform generator
     # carrier waveform
-    AWG_WAVE = 'SQU'  # SIN, SQU, RAMP, PULS, DC
-    AWG_FREQ = 5  # 0.001 to 10000000
+    AWG_WAVE = 'SIN'  # SIN, SQU, RAMP, PULS, DC
+    AWG_FREQ = 2.5  # 0.001 to 10000000
     OUTPUT_VOLT = 100  # max bipolar: 350 V; max unipolar: 700 V
     OUTPUT_DC_OFFSET = 0  # max: 350 V
     AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
@@ -425,8 +476,8 @@ if __name__ == "__main__":
     AWG_MOD_AMPL_SHAPE = 'STAIR'
     AWG_MOD_AMPL_START = 0  # Volts
     AWG_MOD_AMPL_STEP = 50  # Volts
-    AWG_MOD_AMPL_STOP = 150  # Volts
-    AWG_MOD_AMPL_DWELL = 1.5  # seconds
+    AWG_MOD_AMPL_STOP = 200  # Volts
+    AWG_MOD_AMPL_DWELL = 1.25  # seconds
     AWG_MOD_AMPL_CYCLES = 1
     # ---
     # Keithley 6517a monitor
@@ -436,7 +487,7 @@ if __name__ == "__main__":
     # ---
     # Keithley 2410 trigger Andor camera
     K2_INST = 2410  # None, 2410, 6517
-    DELAY_AGILENT_AFTER_ANDOR = 0.5  # seconds
+    DELAY_AGILENT_AFTER_ANDOR = 0.50  # seconds
 
     # ---
 
@@ -533,7 +584,7 @@ if __name__ == "__main__":
     setup_agilent_awg(agilent_inst=AWG, settings=DICT_SETTINGS)
     # -
     # --- Acquire data
-    DATA, DATA_ELEMENTS = data_acquisition_handler(
+    DATA_INPUT, DATA_OUTPUT, DATA_ELEMENTS = data_acquisition_handler(
         agilent_inst=AWG,
         keithley_inst=K1,
         settings=DICT_SETTINGS,
@@ -542,7 +593,8 @@ if __name__ == "__main__":
     # -
     # - Post-process data and save
     post_process_data(
-        data=DATA,
+        data_input=DATA_INPUT,
+        data_output=DATA_OUTPUT,
         data_elements=DATA_ELEMENTS,
         settings=DICT_SETTINGS,
     )
