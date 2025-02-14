@@ -92,7 +92,7 @@ def agilent_waveform(t, settings):
     return signal
 
 
-def plot_arbitrary_waveform_monitor_and_monitor(df_in, df_out, settings):
+def plot_arbitrary_waveform_monitor_and_monitor(df_in, df_out, settings, show_plot=True):
     # df_in.columns = ['awg_volt', 'dt']
     pxi, pyi = 'dt', 'awg_volt'
     # df_out.columns = ['READ', 'TST', 'READ_ZCOR', 'MEAS_ZCOR']
@@ -137,7 +137,7 @@ def plot_arbitrary_waveform_monitor_and_monitor(df_in, df_out, settings):
     ax2.legend(title='modulated waveform', loc='upper left', fontsize='small')
 
     ax2r = ax2.twinx()
-    ax2r.plot(df_out[px], df_out[py1], 'o', ms=2, color='tab:blue')
+    ax2r.plot(df_out[px], df_out[py2], 'o', ms=2, color='tab:blue')
     ax2r.set_ylabel('{} ({})'.format(settings['keithley_monitor'], settings['keithley_measure_units']),
                     color='tab:blue')
 
@@ -145,7 +145,8 @@ def plot_arbitrary_waveform_monitor_and_monitor(df_in, df_out, settings):
     plt.tight_layout()
     plt.savefig(join(settings['save_dir'], 'fig_{}.png'.format(settings['save_id'])),
                 dpi=300, facecolor='w', bbox_inches='tight')
-    plt.show()
+    if show_plot:
+        plt.show()
     plt.close()
 
 
@@ -159,7 +160,7 @@ def package_data_and_export(data_input, data_output, data_elements, settings, re
     # -
     file = join(settings['save_dir'], '{}_data.xlsx'.format(settings['save_id']))
     sns, dfs = ['data_input', 'data_output', 'settings'], [df_in, df_out, df_settings]
-    idx, lbls = [False, True], [None, 'k']
+    idx, lbls = [False, False, True], [None, None, 'k']
     with pd.ExcelWriter(file) as writer:
         for sheet_name, dataframe, idx, idx_lbl in zip(sns, dfs, idx, lbls):
             dataframe.to_excel(writer, sheet_name=sheet_name, index=idx, index_label=idx_lbl)
@@ -167,9 +168,10 @@ def package_data_and_export(data_input, data_output, data_elements, settings, re
         return df_in, df_out
 
 
-def post_process_data(data_input, data_output, data_elements, settings):
+def post_process_data(data_input, data_output, data_elements, settings, show_plot=True):
     df_in, df_out = package_data_and_export(data_input, data_output, data_elements, settings, return_df=True)
-    plot_arbitrary_waveform_monitor_and_monitor(df_in=df_in, df_out=df_out, settings=settings)
+    plot_arbitrary_waveform_monitor_and_monitor(df_in=df_in, df_out=df_out, settings=settings,
+                                                show_plot=show_plot)
 
 
 def setup_2410_trigger(keithley_inst):
@@ -350,7 +352,7 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
     # 0. Trigger Andor camera via trigger instrument
     if trigger_inst is not None:
         trigger_inst.write('OUTP ON')
-        time.sleep(0.25)
+        time.sleep(0.25)  # This shouldn't affect synchronization timing but was characterized for 0.25 s.
         trigger_inst.write(':INIT')
     # 1. Trigger the Keithley to start recording data
     keithley_inst.write(':SYST:TST:REL:RES')  # Reset relative timestamp to 0.
@@ -380,9 +382,9 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
         counts = 0
         time_init = time.time()
         time_meas = time_init
-        trigger_voltages = np.tile(np.array([0, 4]), reps=len(awg_voltages))
-        for v, tv in zip(awg_voltages, trigger_voltages):
-            trigger_inst.write(':SOUR:VOLT ' + str(tv))  # Specify trigger source voltage
+        # trigger_voltages = np.tile(np.array([0, 4]), reps=len(awg_voltages))
+        for v in awg_voltages:  # for v, tv in zip(awg_voltages, trigger_voltages):
+            # trigger_inst.write(':SOUR:VOLT ' + str(tv))  # Specify trigger source voltage
 
             time_elapsed = time_meas - time_init
             data_input.append([v, time_elapsed])
@@ -448,37 +450,97 @@ if __name__ == "__main__":
     # ------------------------------------------------------------------------------------------------------------------
 
     # --- TEST SETUP
+    """
+    Test Types:
+        1. STD1: ramp from 20V to OUTPUT_VOLT over 25 steps, dwell time = 0.15 s, cycles=1, total time = 9.5 s
+            --> 190 images at 20 Hz; standard: 215 images
+        2. STD2: staircase from 20V to OUTPUT_VOLT over 5 steps, dwell time = 0.75 s, cycles=1, total time = 8 s
+            --> ~165 images at 20 Hz; standard: 215 images
+        3. STD3: 1 Hz cycling from 20V to OUTPUT_VOLT, dwell time = 0.5 s, cycles=8, total time = 9.5 s s
+            --> 190 images at 20 Hz; standard: 215 images
+    """
 
     # root directory
-    BASE_DIR = r'C:\Users\nanolab\Desktop\sean\Agilent-Keithley-Andor Synchronization'
+    BASE_DIR = r'C:\Users\nanolab\Desktop\test'
+    TEST_SUBJECT = 'I-V'
+    SAVE_DIR = join(BASE_DIR, TEST_SUBJECT)
+    if not os.path.exists(SAVE_DIR):
+        os.makedirs(SAVE_DIR)
 
     # test id
-    TEST_SUBJECT = 'Characterize-Synchronization'
-    TID = 5
+    TEST_TYPE = 'STD3'
+    AWG_FREQ = 1.0  # 0.001 to 10000000
+    OUTPUT_VOLT = 300  # max bipolar: 350 V; max unipolar: 700 V
+    TID = 28
 
     # --- --- SETUP INSTRUMENTS
-    # --- Agilent 33210A arbitrary waveform generator
-    # carrier waveform
-    AWG_WAVE = 'SIN'  # SIN, SQU, RAMP, PULS, DC
-    AWG_FREQ = 2.5  # 0.001 to 10000000
-    OUTPUT_VOLT = 100  # max bipolar: 350 V; max unipolar: 700 V
-    OUTPUT_DC_OFFSET = 0  # max: 350 V
-    AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
-    AWG_VOLT_UNIT = 'VPP'  # VPP, VRMS
-    # modulating waveform
-    AWG_MOD_STATE = 'OFF'  # ON or OFF
-    AWG_MOD_WAVE = 'SIN'  # SIN, SQU, RAMP, NRAMp, TRI
-    AWG_MOD_FREQ = 0.01  # 2 mHz to 20 kHz (default: 100 Hz)
-    AWG_MOD_DEPTH = 100  # 0% to 120%, where 0% = Amplitude / 2 and 100% = Amplitude
-    AWG_MOD_SOURCE = 'INT'  # 'INTernal' or 'EXTernal'
-    # external amplitude modulation
-    AWG_MOD_AMPL_EXT = 'ON'
-    AWG_MOD_AMPL_SHAPE = 'STAIR'
-    AWG_MOD_AMPL_START = 0  # Volts
-    AWG_MOD_AMPL_STEP = 50  # Volts
-    AWG_MOD_AMPL_STOP = 200  # Volts
-    AWG_MOD_AMPL_DWELL = 1.25  # seconds
-    AWG_MOD_AMPL_CYCLES = 1
+    if TEST_TYPE not in ['STD1', 'STD2', 'STD3']:
+        # --- Agilent 33210A arbitrary waveform generator
+        # carrier waveform
+        AWG_WAVE = 'SIN'  # SIN, SQU, RAMP, PULS, DC
+        AWG_FREQ = 2.5  # 0.001 to 10000000
+        OUTPUT_VOLT = 100  # max bipolar: 350 V; max unipolar: 700 V
+        OUTPUT_DC_OFFSET = 0  # max: 350 V
+        AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
+        AWG_VOLT_UNIT = 'VPP'  # VPP, VRMS
+        # modulating waveform
+        AWG_MOD_STATE = 'OFF'  # ON or OFF
+        AWG_MOD_WAVE = 'SIN'  # SIN, SQU, RAMP, NRAMp, TRI
+        AWG_MOD_FREQ = 0.01  # 2 mHz to 20 kHz (default: 100 Hz)
+        AWG_MOD_DEPTH = 100  # 0% to 120%, where 0% = Amplitude / 2 and 100% = Amplitude
+        AWG_MOD_SOURCE = 'INT'  # 'INTernal' or 'EXTernal'
+        # external amplitude modulation
+        AWG_MOD_AMPL_EXT = 'ON'
+        AWG_MOD_AMPL_SHAPE = 'STAIR'
+        AWG_MOD_AMPL_START = 0  # Volts
+        AWG_MOD_AMPL_STEP = 50  # Volts
+        AWG_MOD_AMPL_STOP = 200  # Volts
+        AWG_MOD_AMPL_DWELL = 1.25  # seconds
+        AWG_MOD_AMPL_CYCLES = 1
+        AWG_MOD_AMPL_VALUES = None  # If None, then use np.arange(start, stop + step / 4, step)
+    else:
+        # --- INPUTS TO MODIFY:
+        # AWG_FREQ = 1000  # 0.001 to 10000000
+        # OUTPUT_VOLT = 100  # max bipolar: 350 V; max unipolar: 700 V
+        # ---
+        # --- --- DONT MODIFY BELOW:
+        # --- Agilent 33210A arbitrary waveform generator
+        # carrier waveform
+        AWG_WAVE = 'SQU'  # SIN, SQU, RAMP, PULS, DC
+        # AWG_FREQ = 1000  # 0.001 to 10000000
+        # OUTPUT_VOLT = 100  # max bipolar: 350 V; max unipolar: 700 V
+        OUTPUT_DC_OFFSET = 0  # max: 350 V
+        AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
+        AWG_VOLT_UNIT = 'VPP'  # VPP, VRMS
+        # modulating waveform
+        AWG_MOD_STATE = 'OFF'  # ON or OFF
+        # external amplitude modulation
+        AWG_MOD_AMPL_EXT = 'ON'
+        AWG_MOD_AMPL_SHAPE = 'STAIR'
+        AWG_MOD_AMPL_START = OUTPUT_MIN_POSSIBLE_AMPLITUDE  # Volts
+        AWG_MOD_AMPL_STOP = OUTPUT_VOLT  # Volts
+        if TEST_TYPE == 'STD1':
+            AWG_MOD_AMPL_DWELL = 0.15  # seconds
+            AWG_MOD_AMPL_NUM_STEPS = 25
+            AWG_MOD_AMPL_CYCLES = 1
+        elif TEST_TYPE == 'STD2':
+            AWG_MOD_AMPL_DWELL = 0.75  # seconds
+            AWG_MOD_AMPL_NUM_STEPS = 5
+            AWG_MOD_AMPL_CYCLES = 1
+        elif TEST_TYPE == 'STD3':
+            AWG_MOD_AMPL_DWELL = 0.5  # seconds
+            AWG_MOD_AMPL_NUM_STEPS = 2
+            AWG_MOD_AMPL_CYCLES = 8
+        else:
+            raise ValueError("Invalid test type.")
+        OUTPUT_MOD_AMPL_VALUES_RAMP = np.linspace(AWG_MOD_AMPL_START, AWG_MOD_AMPL_STOP, num=AWG_MOD_AMPL_NUM_STEPS)
+        AWG_MOD_AMPL_VALUES_RAMP = required_input_to_amplifier(
+            gain=AMPLIFIER_GAIN, output_voltage=OUTPUT_MOD_AMPL_VALUES_RAMP)
+        AWG_MOD_AMPL_VALUES = append_reverse(AWG_MOD_AMPL_VALUES_RAMP, single_point_max=True)
+        AWG_MOD_AMPL_STEP = np.round(np.mean(np.diff(OUTPUT_MOD_AMPL_VALUES_RAMP)), 3)  # Volts
+    # specify unique and descriptive filename as save_id
+    # SAVE_ID = ('tid{}_{}_{}Hz_{}pDC_{}{}_{}VDC-offset'.format(TID, AWG_WAVE, AWG_FREQ, AWG_SQUARE_DUTY_CYCLE, OUTPUT_VOLT, AWG_VOLT_UNIT, OUTPUT_DC_OFFSET))
+    SAVE_ID = 'tid{}_test{}_{}V_{}Hz{}'.format(TID, TEST_TYPE, OUTPUT_VOLT, AWG_FREQ, AWG_WAVE)
     # ---
     # Keithley 6517a monitor
     K1_MONITOR = 'VOLT'  # 'CURR' or 'VOLT'
@@ -490,13 +552,6 @@ if __name__ == "__main__":
     DELAY_AGILENT_AFTER_ANDOR = 0.50  # seconds
 
     # ---
-
-    # setup directories and filenames for export
-    SAVE_ID = ('TEST-MOD_tid{}_{}_{}Hz_{}pDC_{}{}_{}VDC-offset'.format(
-        TID, AWG_WAVE, AWG_FREQ, AWG_SQUARE_DUTY_CYCLE, OUTPUT_VOLT, AWG_VOLT_UNIT, OUTPUT_DC_OFFSET))
-    SAVE_DIR = join(BASE_DIR, TEST_SUBJECT)
-    if not os.path.exists(SAVE_DIR):
-        os.makedirs(SAVE_DIR)
 
     if TID is not None:
         AWG_VOLT, AWG_DC_OFFSET = required_input_to_amplifier(
@@ -520,17 +575,21 @@ if __name__ == "__main__":
             AWG_MOD_AMPL_STOP = 0.0
             AWG_MOD_AMPL_CYCLES = 0.0
             AWG_MOD_AMPL_VALUES = 'NONE'
+        elif AWG_MOD_AMPL_VALUES is None:
+                start = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_START)
+                stop = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_STOP)
+                step = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_STEP)
+                values = np.arange(start, stop + step / 4, step)
+                values = replace_amplitude_if_out_of_range(arr=values, min_amplitude=AWG_MIN_ALLOWABLE_AMPLITUDE)
+                AWG_MOD_AMPL_NUM_STEPS = len(values)
+                AWG_MOD_AMPL_VALUES = append_reverse(values, single_point_max=True)
         else:
-            start = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_START)
-            stop = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_STOP)
-            step = required_input_to_amplifier(gain=AMPLIFIER_GAIN, output_voltage=AWG_MOD_AMPL_STEP)
-            values = np.arange(start, stop + step / 4, step)
-            values = replace_amplitude_if_out_of_range(arr=values, min_amplitude=AWG_MIN_ALLOWABLE_AMPLITUDE)
-            AWG_MOD_AMPL_VALUES = append_reverse(values, single_point_max=True)
+            pass
         DICT_SETTINGS = {
             'tid': TID,
             'save_dir': SAVE_DIR,
             'save_id': SAVE_ID,
+            'test_type': TEST_TYPE,
             'output_volt': OUTPUT_VOLT,
             'output_dc_offset': OUTPUT_DC_OFFSET,
             'awg_wave': AWG_WAVE,
@@ -550,6 +609,7 @@ if __name__ == "__main__":
             'awg_mod_ampl_step': AWG_MOD_AMPL_STEP,
             'awg_mod_ampl_stop': AWG_MOD_AMPL_STOP,
             'awg_mod_ampl_dwell': AWG_MOD_AMPL_DWELL,
+            'awg_mod_ampl_num_steps': AWG_MOD_AMPL_NUM_STEPS,
             'awg_mod_ampl_cycles': AWG_MOD_AMPL_CYCLES,
             'awg_mod_ampl_values': AWG_MOD_AMPL_VALUES,
             'awg_output_termination': AWG_OUTPUT_TERMINATION,
@@ -597,6 +657,7 @@ if __name__ == "__main__":
         data_output=DATA_OUTPUT,
         data_elements=DATA_ELEMENTS,
         settings=DICT_SETTINGS,
+        show_plot=False,
     )
 
 

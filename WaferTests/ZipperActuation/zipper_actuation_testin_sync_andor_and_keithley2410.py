@@ -64,7 +64,7 @@ def setup_6517_trigger(keithley_inst, voltage_levels, nplc=0.01):
     keithley_inst.write(':SYST:ZCOR ON')  # Enable (ON) or disable (OFF) zero correct (default: OFF)
     # SYSTEM
     keithley_inst.write(':SYST:RNUM:RES')  # reset reading number to zero
-    keithley_inst.write(':DISP:ENAB ON')  # Enable or disable the front-panel display
+    keithley_inst.write(':DISP:ENAB OFF')  # Enable or disable the front-panel display
     keithley_inst.write(':SYST:TSC OFF')  # Enable or disable external temperature readings (default: ON)
     keithley_inst.write(':SYST:TST:TYPE REL')  # Configure timestamp type: RELative or RTClock
     keithley_inst.write(':TRAC:FEED:CONT NEV')  # disable buffer control
@@ -176,20 +176,20 @@ if __name__ == "__main__":
         raise ValueError("Check instruments are connected.")
 
     k1_source_GPIB, k1_source_board_index = 25, 1  # Keithley: source measure unit
-    k2_trigger_GPIB, k2_trigger_board_index, k2_inst = 24, 0, None  # '6517a'  # Keithley: used to trigger camera
+    k2_trigger_GPIB, k2_trigger_board_index, k2_inst = 24, 0, '6517a'  # '6517a' or None: trigger Keithley
 
     # --- INPUTS
 
-    wid = 'W13_trace-to-C9-0pT-to-GND-to-GND'
-    path_results = r'C:\Users\nanolab\Desktop\I-V\{}'.format(wid)
+    wid = 'I-V'
+    path_results = r'C:\Users\nanolab\Desktop\test\{}'.format(wid)
     if not os.path.exists(path_results):
         os.makedirs(path_results)
 
-    test_num = 1  # 1: 150ms staircase ramp, 2,3: 500ms staircase ramp, 4: Step and Hold
-    test_id = 2
-    Vmax = -0.6
-    Vstep = np.abs(0.02)  # always positive
-    save_id = 'loc1_tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
+    test_num = 2  # 1: 150ms staircase ramp, 2,3: 500ms staircase ramp, 4: Step and Hold
+    test_id = 35
+    Vmax = 400
+    Vstep = np.abs(50)  # always positive
+    save_id = 'tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
 
     # ------------------------------------------------------------------------------------------------------------------
     # SHOULD NOT NEED TO MODIFY SCRIPT BELOW
@@ -244,8 +244,8 @@ if __name__ == "__main__":
     # --- KEITHLEY CODE
 
     # CURRENT
-    current_range = 20E-3
-    current_compliance = 20E-3
+    current_range = 10e-6  # 20E-3
+    current_compliance = 100e-6  # 20E-3
     # VOLTAGE
     values_lst = numpy_array_to_string(values_up_and_down)
     num_points = len(values_up_and_down)
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     idxVCTRS = 0, 1, 2, 3, 4
     num_elements = len(elements_sense.split(','))
     # ---
-    # Trigger Keithley (these variables are only used by Keithley 2410)
+    # Trigger Keithley (these variables are only used if trigger is Keithley 2410)
     trigger_voltage = [4, 0]
     trigger_count = len(trigger_voltage)
     trigger_source_measure_delay = 0.0

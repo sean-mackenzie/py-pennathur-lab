@@ -6,8 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testin_sync_andor_and_keithley2410.py" beforeDir="false" afterPath="$PROJECT_DIR$/WaferTests/ZipperActuation/zipper_actuation_testin_sync_andor_and_keithley2410.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/test_Agilent_33210A.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_Agilent_33210A.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test_keithley_2410_4-Wire.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_keithley_2410_4-Wire.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,7 +90,7 @@
       <recent name="C:\Users\nanolab\PythonProjects\py-pennathur-lab\WaferTests" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.test_Agilent_33210A">
+  <component name="RunManager" selected="Python.zipper_actuation_testin_sync_andor_and_keithley2410">
     <configuration name="IV_sweep_keithley_6517b" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="py-pennathur-lab" />
       <option name="ENV_FILES" value="" />
@@ -457,6 +457,9 @@
       <workItem from="1739345787421" duration="7268000" />
       <workItem from="1739394241335" duration="4422000" />
       <workItem from="1739417458501" duration="17273000" />
+      <workItem from="1739484191969" duration="8556000" />
+      <workItem from="1739504392573" duration="3845000" />
+      <workItem from="1739513982075" duration="6259000" />
     </task>
     <servers />
   </component>
@@ -480,7 +483,7 @@
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep_descending.coverage" NAME="ex7_sean_staircase_sweep_descending Coverage Results" MODIFIED="1695085293887" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$test_ex8_keithley2410_sweep.coverage" NAME="zipper_actuation_testing_keithley2410 Coverage Results" MODIFIED="1735542046974" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/ZipperActuation" />
-    <SUITE FILE_PATH="coverage/py_pennathur_lab$zipper_actuation_testin_sync_andor_and_keithley2410.coverage" NAME="zipper_actuation_testin_sync_andor_and_keithley2410 Coverage Results" MODIFIED="1738395547178" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$zipper_actuation_testin_sync_andor_and_keithley2410.coverage" NAME="zipper_actuation_testin_sync_andor_and_keithley2410 Coverage Results" MODIFIED="1739520064449" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$trigex2_Keithley_Two_Instrument_Trigger_Sync.coverage" NAME="trigex2_Keithley_Two-Instrument-Trigger-Sync Coverage Results" MODIFIED="1698389029029" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/playground" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$Keithley_2361_TCU_examples.coverage" NAME="Keithley_2361_TCU_examples Coverage Results" MODIFIED="1698537622049" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/external" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$test_keithley_2410_4_Wire.coverage" NAME="test_keithley_2410_4-Wire Coverage Results" MODIFIED="1739420333004" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
@@ -488,7 +491,7 @@
     <SUITE FILE_PATH="coverage/py_pennathur_lab$IV_triangle_wave_arbitrary_config.coverage" NAME="IV_triangle_wave_arbitrary_config Coverage Results" MODIFIED="1709335996618" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/I-V" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$IV_sweep_keithley_6517b_SVMI_config_Voltage_Cycling.coverage" NAME="IV_sweep_keithley_6517b_SVMI_config_Voltage-Cycling Coverage Results" MODIFIED="1699259813874" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/I-V" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex8_keithley_manual_custom_sweep.coverage" NAME="ex8_keithley_manual_custom_sweep Coverage Results" MODIFIED="1696814409375" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
-    <SUITE FILE_PATH="coverage/py_pennathur_lab$test_Agilent_33210A.coverage" NAME="test_Agilent_33210A Coverage Results" MODIFIED="1739437386166" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$test_Agilent_33210A.coverage" NAME="test_Agilent_33210A Coverage Results" MODIFIED="1739517247780" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$trigex1_config_multi_instrument_trigger.coverage" NAME="trigex1_config_multi_instrument_trigger Coverage Results" MODIFIED="1698209098137" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$IV_sweep_keithley_6517b_SVMI_config_microposts.coverage" NAME="IV_sweep_keithley_6517b_SVMI_config_microposts Coverage Results" MODIFIED="1721543982893" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/Microposts" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$test_pylablib_andor_control.coverage" NAME="test_pylablib_andor_control Coverage Results" MODIFIED="1736458743232" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
