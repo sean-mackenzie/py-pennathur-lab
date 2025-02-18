@@ -438,13 +438,18 @@ if __name__ == "__main__":
     # Agilent 33210A aribtrary waveform generator
     AWG_USB = 'USB0::0x0957::0x1507::MY48003320::INSTR'  # or, AWG_GPIB, AWG_BOARD_INDEX = 10, 0
     AMPLIFIER_GAIN = 50
-    AWG_OUTPUT_TERMINATION = '10E3'
-    AWG_MIN_ALLOWABLE_AMPLITUDE = 0.355  # NOTE: actual min amplitude for 10E3 output termination is 112 mV.
+    AWG_OUTPUT_TERMINATION = 'INF'  # '10E3' or 'INF'
+    DICT_AWG_MIN_ALLOWABLE_AMPLITUDE = {'INF': None, '10E3': 0.355}  # actual min amplitude for 10E3 output termination is 112 mV.
+    AWG_MIN_ALLOWABLE_AMPLITUDE = None
     OUTPUT_MIN_POSSIBLE_AMPLITUDE = AWG_MIN_ALLOWABLE_AMPLITUDE * AMPLIFIER_GAIN
     # Keithley 6517 electrometer used as voltage or current monitor of Trek amplifier output
     K1_GPIB, K1_BOARD_INDEX = 24, 0
     # Keithley 2410 used to trigger Andor camera
     K2_TRIGGER_GPIB, K2_TRIGGER_BOARD_INDEX = 25, 1
+
+    if AWG_OUTPUT_TERMINATION == 'INF':
+        raise ValueError("Need to re-calibrate AWG for INF output termination.")
+        # NOTE: I now believe INF is the correct output termination. Not 10E3.
 
     # ------------------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
