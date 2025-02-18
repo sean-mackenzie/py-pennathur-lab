@@ -5,9 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bfa42aef-679a-4c54-acb0-545349518745" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/test/test_6517_charge_measurement.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/examples/external/test_6517b_pymeasure.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/test_Agilent_33210A.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_Agilent_33210A.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_6517_charge_measurement.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_6517_charge_measurement.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,6 +62,7 @@
   "keyToString": {
     "Python.test_6517_charge_measurement.executor": "Run",
     "Python.test_6517a_test_sequence.executor": "Run",
+    "Python.test_6517b_pymeasure.executor": "Run",
     "Python.test_Agilent_33210A.executor": "Run",
     "Python.test_keithley_2410_4-Wire.executor": "Run",
     "Python.zipper_actuation_testin_sync_andor_and_keithley2410.executor": "Run",
@@ -91,7 +92,7 @@
       <recent name="C:\Users\nanolab\PythonProjects\py-pennathur-lab\WaferTests" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.test_6517_charge_measurement">
+  <component name="RunManager">
     <configuration name="IV_sweep_keithley_6517b" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="py-pennathur-lab" />
       <option name="ENV_FILES" value="" />
@@ -487,6 +488,8 @@
       <workItem from="1739504392573" duration="3845000" />
       <workItem from="1739513982075" duration="6259000" />
       <workItem from="1739844254202" duration="2116000" />
+      <workItem from="1739864000941" duration="15337000" />
+      <workItem from="1739910610466" duration="5859000" />
     </task>
     <servers />
   </component>
@@ -534,6 +537,7 @@
     <SUITE FILE_PATH="coverage/py_pennathur_lab$IV_sweep_keithley_6517b_SVMI_config.coverage" NAME="IV_sweep_keithley_6517b_SVMI_config Coverage Results" MODIFIED="1721600736919" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/WaferTests/I-V" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_keithley_manual_staircase_sweep.coverage" NAME="ex7_keithley_manual_staircase_sweep Coverage Results" MODIFIED="1695081882620" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$Keithley_Two_Instrument_Trigger_Sync_Sweep.coverage" NAME="Keithley_Two-Instrument-Trigger-Sync-Sweep Coverage Results" MODIFIED="1698391495918" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/external" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$test_6517b_pymeasure.coverage" NAME="test_6517b_pymeasure Coverage Results" MODIFIED="1739916410585" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/external" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$Keithley_6517b_AA.coverage" NAME="Keithley_6517b_AA Coverage Results" MODIFIED="1698467068669" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/external" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex11_keithley_6517b_buffer_control.coverage" NAME="ex11_keithley_6517b_buffer_control Coverage Results" MODIFIED="1737955318714" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex10_keithley_6517b_trigger_sweep.coverage" NAME="ex10_keithley_6517b_trigger_sweep Coverage Results" MODIFIED="1698550294027" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
@@ -544,6 +548,6 @@
     <SUITE FILE_PATH="coverage/py_pennathur_lab$trigex1_keithley_establish_connection_to_multi_instruments.coverage" NAME="trigex1_keithley_establish_connection_to_multi_instruments Coverage Results" MODIFIED="1698285147511" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/playground" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$.coverage" NAME=" Coverage Results" MODIFIED="1698976525940" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
     <SUITE FILE_PATH="coverage/py_pennathur_lab$ex7_sean_staircase_sweep.coverage" NAME="ex7_sean_staircase_sweep Coverage Results" MODIFIED="1695085088690" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/examples/darkroom" />
-    <SUITE FILE_PATH="coverage/py_pennathur_lab$test_6517_charge_measurement.coverage" NAME="test_6517_charge_measurement Coverage Results" MODIFIED="1739844918687" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/py_pennathur_lab$test_6517_charge_measurement.coverage" NAME="test_6517_charge_measurement Coverage Results" MODIFIED="1739911315959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/test" />
   </component>
 </project>
