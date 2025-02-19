@@ -75,6 +75,8 @@ Discussion on why these these commands *seem* to be the solution to reading from
             ** This seems like it would yield the desired data elements (i.e., reading, timestamp, and channel) 
             and is made even more interesting by the fact that they initially asserted :TRAC:ELEM NONE. 
                 *** This is something that I will have to test out. 
+                    --> I did test this out and it didn't work. But, the "normal" method did work.
+                    --> keithley.write(':TRACE:ELEM TST,VSO') instead of NONE enables other data elements.
                 *** Perhaps, telling the instrument to include other data in the buffer somehow confuses it. 
         * Note: the default parameters for:
             :FORM:ELEM --> READ,CHAN,RNUM,UNIT,TST,STAT     (optional: VSOurce)
@@ -109,6 +111,19 @@ Discussion on why these these commands *seem* to be the solution to reading from
 
 """
 
+second_pass_modifiers = True
+""" 
+second pass modifiers are additional features that I added to the original code.
+They were shown here to work, so I will leave them for future reference. 
+
+NOTE: some things I found out running other scripts:
+    * This code will only work if NPLC < 0.46. 
+        Otherwise, you will get a timeout error, regardless of how long you set the timeout to. I think this is related
+         to :LSYNC, maybe because :LYSNC OFF doesn't work if NPLC >= 0.5. 
+    * This code will not work if LSYNC is enabled. 
+        Regardless of the NPLC or timeout. 
+"""
+
 # Replace 'GPIB::24' with your instrument's address
 keithley = Keithley6517B("GPIB2::27::INSTR")
 
@@ -131,7 +146,10 @@ keithley.write(':SYST:LSYNC:STAT 0')
 
 keithley.write(':TRACE:FEED:CONT NEVER')
 keithley.write(':TRACE:CLEAR')
-keithley.write(':TRACE:ELEM NONE')
+if second_pass_modifiers:
+    keithley.write(':TRACE:ELEM TST,VSO')  # data elements
+else:
+    keithley.write(':TRACE:ELEM NONE')
 keithley.write(':TRACE:POINTS 100')
 keithley.write(':TRIG:COUNT 100')
 keithley.write(':TRIG:DELAY 0')
@@ -149,12 +167,29 @@ time.sleep(2)
 
 keithley.stop_buffer()  # Stop storing readings
 
-# Read data from buffer
-data = keithley.buffer_data
-print("Buffer: {}".format(data))
+if second_pass_modifiers:
+    # NOTE: READ, STAT, RNUM, and UNIT are always enabled for the buffer and are included in the response for :ELEM?
+    keithley.write(':FORM:ELEM READ,STAT,RNUM,UNIT,TST,VSO')  # data elements
 
-print("Readings from Buffer:")
-for i, reading in enumerate(data):
-    print("{}: {}".format(i, reading))
+    # Read data from buffer
+    # data = keithley.buffer_data
+    #   def buffer_data(self):
+    """     Get a numpy array of values from the buffer. """
+    #       self.write(":FORM:DATA ASCII")
+    #       return np.array(self.values(":TRAC:DATA?"), dtype=np.float64)
+    def read_buffer_data(inst):
+        inst.write(":FORM:DATA ASCII")
+        return inst.ask(":TRAC:DATA?") # inst.values(":TRAC:DATA?")
+    data = read_buffer_data(inst=keithley)
+    print("Buffer: {}".format(data))
+
+else:
+    # Read data from buffer
+    data = keithley.buffer_data
+    print("Buffer: {}".format(data))
+
+    print("Readings from Buffer:")
+    for i, reading in enumerate(data):
+        print("{}: {}".format(i, reading))
 
 keithley.write(':OUTP OFF')
