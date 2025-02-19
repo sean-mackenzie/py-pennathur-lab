@@ -398,7 +398,7 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
                     time_last_meas=time_meas, data_list=data_output, meas_counter=counts,
                 )
     else:
-        data_input = []
+        data_input = [[0.0, 0.0], [0.0, 0.0]]
         data_output = []
         for counts in range(settings['keithley_num_samples']):
             datum = keithley_inst.query_ascii_values(':FETCh?', container=np.array)  # request data.
@@ -439,17 +439,13 @@ if __name__ == "__main__":
     AWG_USB = 'USB0::0x0957::0x1507::MY48003320::INSTR'  # or, AWG_GPIB, AWG_BOARD_INDEX = 10, 0
     AMPLIFIER_GAIN = 50
     AWG_OUTPUT_TERMINATION = 'INF'  # '10E3' or 'INF'
-    DICT_AWG_MIN_ALLOWABLE_AMPLITUDE = {'INF': None, '10E3': 0.355}  # actual min amplitude for 10E3 output termination is 112 mV.
-    AWG_MIN_ALLOWABLE_AMPLITUDE = None
+    DICT_AWG_MIN_ALLOWABLE_AMPLITUDE = {'INF': 0.375, '10E3': 0.355}  # actual min amplitude for 10E3 output termination is 112 mV.
+    AWG_MIN_ALLOWABLE_AMPLITUDE = DICT_AWG_MIN_ALLOWABLE_AMPLITUDE[AWG_OUTPUT_TERMINATION]
     OUTPUT_MIN_POSSIBLE_AMPLITUDE = AWG_MIN_ALLOWABLE_AMPLITUDE * AMPLIFIER_GAIN
     # Keithley 6517 electrometer used as voltage or current monitor of Trek amplifier output
     K1_GPIB, K1_BOARD_INDEX = 24, 0
     # Keithley 2410 used to trigger Andor camera
     K2_TRIGGER_GPIB, K2_TRIGGER_BOARD_INDEX = 25, 1
-
-    if AWG_OUTPUT_TERMINATION == 'INF':
-        raise ValueError("Need to re-calibrate AWG for INF output termination.")
-        # NOTE: I now believe INF is the correct output termination. Not 10E3.
 
     # ------------------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
@@ -474,12 +470,25 @@ if __name__ == "__main__":
 
     # test id
     TEST_TYPE = 'STD3'
-    AWG_FREQ = 1.0  # 0.001 to 10000000
+    AWG_FREQ = 0.1  # 0.001 to 10000000
     OUTPUT_VOLT = 300  # max bipolar: 350 V; max unipolar: 700 V
-    TID = 28
+    TID = 8
 
     # --- --- SETUP INSTRUMENTS
-    if TEST_TYPE not in ['STD1', 'STD2', 'STD3']:
+    if TEST_TYPE == 'CAL':
+        # --- Agilent 33210A arbitrary waveform generator
+        # carrier waveform
+        AWG_WAVE = 'SQU'  # SIN, SQU, RAMP, PULS, DC
+        AWG_FREQ = 0.25  # 0.001 to 10000000
+        OUTPUT_VOLT = 1  # max bipolar: 350 V; max unipolar: 700 V
+        OUTPUT_DC_OFFSET = 0  # max: 350 V
+        AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
+        AWG_VOLT_UNIT = 'VPP'  # VPP, VRMS
+        # modulating waveform
+        AWG_MOD_STATE = 'OFF'  # ON or OFF
+        # external amplitude modulation
+        AWG_MOD_AMPL_EXT = 'OFF'
+    elif TEST_TYPE not in ['STD1', 'STD2', 'STD3']:
         # --- Agilent 33210A arbitrary waveform generator
         # carrier waveform
         AWG_WAVE = 'SIN'  # SIN, SQU, RAMP, PULS, DC
@@ -578,6 +587,8 @@ if __name__ == "__main__":
             AWG_MOD_AMPL_START = 0.0
             AWG_MOD_AMPL_STEP = 0.0
             AWG_MOD_AMPL_STOP = 0.0
+            AWG_MOD_AMPL_DWELL = 0.0
+            AWG_MOD_AMPL_NUM_STEPS = 0.0
             AWG_MOD_AMPL_CYCLES = 0.0
             AWG_MOD_AMPL_VALUES = 'NONE'
         elif AWG_MOD_AMPL_VALUES is None:
