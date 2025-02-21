@@ -425,7 +425,7 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
 
 if __name__ == "__main__":
     # NOTE 1: the input impedance of the Trek Amplifier is 90 kOhms.
-    # NOTE 2: it seems the "most appropriate" output termination for Trek is 10 kOhms.
+    # NOTE 2: it seems the "most appropriate" output termination for Trek is INF.
 
     # --- HARDWARE SETUP
     # available instruments
@@ -470,9 +470,9 @@ if __name__ == "__main__":
 
     # test id
     TEST_TYPE = 'STD3'
-    AWG_FREQ = 0.1  # 0.001 to 10000000
+    AWG_FREQ = 5  # 0.001 to 10000000
     OUTPUT_VOLT = 300  # max bipolar: 350 V; max unipolar: 700 V
-    TID = 8
+    TID = 35
 
     # --- --- SETUP INSTRUMENTS
     if TEST_TYPE == 'CAL':
