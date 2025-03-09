@@ -69,25 +69,28 @@ if __name__ == "__main__":
 
     # --- INPUTS
 
-    wid = 'C19-30pT_20nmAu'
+    wid = 'C13-20pT_25nmAu'
     path_results = r'C:\Users\nanolab\Box\2024\zipper_paper\Methods\Keithley 2410 4-Wire\{}'.format(wid)
     if not os.path.exists(path_results):
         os.makedirs(path_results)
 
+    test_id = 4
     prog_ = 'AUTO'  # 'AUTO' or 'MAN'
-    test_id = 6
-    save_id = '{}_tid{}'.format(prog_, test_id)
+    res_wiring = '2wire'  # '4wire' or '2wire'
+    loc = 'across-opposite-pads'  # 'across-4wire-trace' or 'across-opposite-pads'
+    save_id = 'tid{}_{}-{}_{}'.format(test_id, res_wiring, prog_, loc)
 
     # ------------------
+    nplc = 10
+    # The below is only used if prog_ == AUTO
     single_point_max = True
-    sc = 10
+    sc = 0.5
     start, stop, step = 0.1 * sc, 0.5 * sc, 0.025 * sc
     values = np.arange(start, stop + step / 4, step)
     values_lst = numpy_array_to_string(values)
     num_points = len(values)
     source_measure_delay = 0.10  # (s)
-    nplc = 10
-    ohms_range = 1e6
+    ohms_range = 1e3
     elements_sense = 'VOLTage, CURRent, TIME, RESistance'  # STATus
 
     # ------------------
@@ -104,18 +107,24 @@ if __name__ == "__main__":
         k1.write(':SENS:FUNC "RES"')
         k1.write(':SENS:RES:MODE AUTO')
         k1.write(':SENS:RES:NPLC ' + str(nplc))
-        k1.write(':SYST:RSEN ON')
+        if res_wiring == '4wire':
+            k1.write(':SYST:RSEN ON')
+        elif res_wiring == '2wire':
+            k1.write(':SYST:RSEN OFF')
+        else:
+            raise ValueError("Check res wiring setting.")
         k1.write(':FORM:ELEM RES')
         k1.write(':OUTP ON')
-        data = k1.query(':READ?')
+        data = k1.query(':READ?').rstrip()
         k1.write(':OUTP OFF')
         data_elem = k1.query(':FORM:ELEM?')
+        print(data)
     elif prog_ == 'MAN':
         k1.write(':SENS:FUNC "RES"')
         k1.write(':SENS:RES:MODE MAN')
         k1.write(':SENS:RES:RANG ' + str(ohms_range))
         k1.write(':SENS:RES:NPLC ' + str(nplc))
-        k1.write(':SENS:VOLT:PROT ' + str(np.max(values)))
+        k1.write(':SENS:VOLT:PROT ' + str(np.max(values) * 1.5))
         k1.write(':SENS:CURR:PROT 20E-3')
 
         # keithley.write(':SENS:FUNC:CONC OFF')  # Turn off concurrent functions.
@@ -126,7 +135,13 @@ if __name__ == "__main__":
         k1.write(':TRIG:COUN ' + str(num_points))  # Trigger count = # sweep points.
         k1.write(':SOUR:DEL %g' % source_measure_delay)  # 50ms source delay.
 
-        k1.write(':SYST:RSEN ON')
+        if res_wiring == '4wire':
+            k1.write(':SYST:RSEN ON')
+        elif res_wiring == '2wire':
+            k1.write(':SYST:RSEN OFF')
+        else:
+            raise ValueError("Check res wiring setting.")
+
         k1.write(':FORM:ELEM VOLT,CURR,RES,TIME')
         #k1.write(':DATA:TSTamp:FORMat DELTa')
 
@@ -139,7 +154,6 @@ if __name__ == "__main__":
         raise ValueError("Check program setting.")
 
     print(data_elem)
-    print(data)
     k1.close()
 
     if prog_ == 'AUTO':
@@ -150,7 +164,7 @@ if __name__ == "__main__":
             'RES': data,
         }
         df = pd.DataFrame.from_dict(data=dict_res, orient='index')
-        df.to_excel(join(path_results, '{}_4-wire.xlsx'.format(save_id)))
+        df.to_excel(join(path_results, '{}_4-wire__R={}.xlsx'.format(save_id, data)))
     else:
         # post-process stimulus data
         data_struct = np.reshape(data, (num_points, len(data_elem.split(','))))
@@ -170,6 +184,8 @@ if __name__ == "__main__":
         ax.plot(df['VOLT'], df['RES'], 'o-', label='data')
         ax.set_xlabel('Voltage (V)')
         ax.set_ylabel('Resistance (Ohms)')
+        plt.suptitle(save_id)
+        plt.tight_layout()
         fig.savefig(join(path_results, '{}_4-wire.png'.format(save_id)))
         plt.show()
         plt.close(fig)

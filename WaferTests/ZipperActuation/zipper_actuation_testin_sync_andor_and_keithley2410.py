@@ -177,6 +177,7 @@ if __name__ == "__main__":
 
     k1_source_GPIB, k1_source_board_index = 25, 1  # Keithley: source measure unit
     k2_trigger_GPIB, k2_trigger_board_index, k2_inst = 24, 0, '6517a'  # '6517a' or None: trigger Keithley
+    # MCONNECT hardware configuration for 6517 trigger keithley
 
     # --- INPUTS
 
@@ -185,10 +186,10 @@ if __name__ == "__main__":
     if not os.path.exists(path_results):
         os.makedirs(path_results)
 
-    test_num = 2  # 1: 150ms staircase ramp, 2,3: 500ms staircase ramp, 4: Step and Hold
-    test_id = 35
-    Vmax = 400
-    Vstep = np.abs(50)  # always positive
+    test_num = 1  # 1: 150ms staircase ramp, 2,3: 500ms staircase ramp, 4: Step and Hold
+    test_id = 63
+    Vmax = 600
+    Vstep = np.abs(20)  # always positive
     save_id = 'tid{}_test{}_{}V_{}dV'.format(test_id, test_num, Vmax, Vstep)
 
     # ------------------------------------------------------------------------------------------------------------------

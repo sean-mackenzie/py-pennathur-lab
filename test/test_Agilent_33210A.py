@@ -370,6 +370,12 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
             join_smooth=True,
         )
 
+        awg_dwell_times = repeat_n_cycles(
+            arr=settings['awg_mod_dwell_values'],
+            n=settings['awg_mod_ampl_cycles'],
+            join_smooth=True,
+        )
+
         def _data_acquisition_handler_loop(time_last_meas, data_list, meas_counter):
             if time.time() > time_last_meas + settings['keithley_fetch_delay'] and meas_counter < settings['keithley_num_samples']:
                     data_list.append(keithley_inst.query_ascii_values(':FETCh?', container=np.array))
@@ -383,7 +389,7 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
         time_init = time.time()
         time_meas = time_init
         # trigger_voltages = np.tile(np.array([0, 4]), reps=len(awg_voltages))
-        for v in awg_voltages:  # for v, tv in zip(awg_voltages, trigger_voltages):
+        for v, t_dwell in zip(awg_voltages, awg_dwell_times):  # for v, tv in zip(awg_voltages, trigger_voltages):
             # trigger_inst.write(':SOUR:VOLT ' + str(tv))  # Specify trigger source voltage
 
             time_elapsed = time_meas - time_init
@@ -393,7 +399,7 @@ def data_acquisition_handler(agilent_inst, keithley_inst, settings, trigger_inst
             agilent_inst.write('VOLT ' + str(v))  # VOLTage
             tic = time.time()
 
-            while time.time() < tic + settings['awg_mod_ampl_dwell']:
+            while time.time() < tic + t_dwell:  # settings['awg_mod_ampl_dwell']:
                 time_meas, data_output, counts = _data_acquisition_handler_loop(
                     time_last_meas=time_meas, data_list=data_output, meas_counter=counts,
                 )
@@ -437,7 +443,7 @@ if __name__ == "__main__":
     # instrument addresses
     # Agilent 33210A aribtrary waveform generator
     AWG_USB = 'USB0::0x0957::0x1507::MY48003320::INSTR'  # or, AWG_GPIB, AWG_BOARD_INDEX = 10, 0
-    AMPLIFIER_GAIN = 50
+    AMPLIFIER_GAIN = 69.05
     AWG_OUTPUT_TERMINATION = 'INF'  # '10E3' or 'INF'
     DICT_AWG_MIN_ALLOWABLE_AMPLITUDE = {'INF': 0.375, '10E3': 0.355}  # actual min amplitude for 10E3 output termination is 112 mV.
     AWG_MIN_ALLOWABLE_AMPLITUDE = DICT_AWG_MIN_ALLOWABLE_AMPLITUDE[AWG_OUTPUT_TERMINATION]
@@ -469,10 +475,10 @@ if __name__ == "__main__":
         os.makedirs(SAVE_DIR)
 
     # test id
-    TEST_TYPE = 'STD3'
-    AWG_FREQ = 5  # 0.001 to 10000000
-    OUTPUT_VOLT = 300  # max bipolar: 350 V; max unipolar: 700 V
-    TID = 35
+    TEST_TYPE = 'STD1SIN'
+    AWG_FREQ = 1  # 0.001 to 10000000
+    OUTPUT_VOLT = 345  # max bipolar: 350 V; max unipolar: 700 V
+    TID = 55
 
     # --- --- SETUP INSTRUMENTS
     if TEST_TYPE == 'CAL':
@@ -480,7 +486,7 @@ if __name__ == "__main__":
         # carrier waveform
         AWG_WAVE = 'SQU'  # SIN, SQU, RAMP, PULS, DC
         AWG_FREQ = 0.25  # 0.001 to 10000000
-        OUTPUT_VOLT = 1  # max bipolar: 350 V; max unipolar: 700 V
+        OUTPUT_VOLT = 300 # 1  # max bipolar: 350 V; max unipolar: 700 V
         OUTPUT_DC_OFFSET = 0  # max: 350 V
         AWG_SQUARE_DUTY_CYCLE = 50  # 20 to 80 (square waves only)
         AWG_VOLT_UNIT = 'VPP'  # VPP, VRMS
@@ -488,7 +494,7 @@ if __name__ == "__main__":
         AWG_MOD_STATE = 'OFF'  # ON or OFF
         # external amplitude modulation
         AWG_MOD_AMPL_EXT = 'OFF'
-    elif TEST_TYPE not in ['STD1', 'STD2', 'STD3']:
+    elif TEST_TYPE not in ['STD1', 'STD2', 'STD3', 'VAR3', 'STD1SIN']:
         # --- Agilent 33210A arbitrary waveform generator
         # carrier waveform
         AWG_WAVE = 'SIN'  # SIN, SQU, RAMP, PULS, DC
@@ -509,7 +515,7 @@ if __name__ == "__main__":
         AWG_MOD_AMPL_START = 0  # Volts
         AWG_MOD_AMPL_STEP = 50  # Volts
         AWG_MOD_AMPL_STOP = 200  # Volts
-        AWG_MOD_AMPL_DWELL = 1.25  # seconds
+        AWG_MOD_AMPL_DWELL_PER_STEP = 1.25  # seconds
         AWG_MOD_AMPL_CYCLES = 1
         AWG_MOD_AMPL_VALUES = None  # If None, then use np.arange(start, stop + step / 4, step)
     else:
@@ -534,27 +540,61 @@ if __name__ == "__main__":
         AWG_MOD_AMPL_START = OUTPUT_MIN_POSSIBLE_AMPLITUDE  # Volts
         AWG_MOD_AMPL_STOP = OUTPUT_VOLT  # Volts
         if TEST_TYPE == 'STD1':
-            AWG_MOD_AMPL_DWELL = 0.15  # seconds
+            AWG_MOD_AMPL_DWELL_ON = 0.15  # seconds
+            AWG_MOD_AMPL_DWELL_OFF = 0.0  # seconds
+            AWG_MOD_AMPL_DWELL_PER_STEP = AWG_MOD_AMPL_DWELL_ON + AWG_MOD_AMPL_DWELL_OFF  # seconds
+            # AWG_MOD_AMPL_DWELL = 0.15  # seconds
             AWG_MOD_AMPL_NUM_STEPS = 25
             AWG_MOD_AMPL_CYCLES = 1
         elif TEST_TYPE == 'STD2':
-            AWG_MOD_AMPL_DWELL = 0.75  # seconds
+            AWG_MOD_AMPL_DWELL_ON = 0.75  # seconds
+            AWG_MOD_AMPL_DWELL_OFF = 0.0  # seconds
+            AWG_MOD_AMPL_DWELL_PER_STEP = AWG_MOD_AMPL_DWELL_ON + AWG_MOD_AMPL_DWELL_OFF  # seconds
+            # AWG_MOD_AMPL_DWELL = 0.75  # seconds
             AWG_MOD_AMPL_NUM_STEPS = 5
             AWG_MOD_AMPL_CYCLES = 1
         elif TEST_TYPE == 'STD3':
-            AWG_MOD_AMPL_DWELL = 0.5  # seconds
+            AWG_MOD_AMPL_DWELL_ON = 0.5  # seconds
+            AWG_MOD_AMPL_DWELL_OFF = 0.5  # seconds
+            AWG_MOD_AMPL_DWELL_PER_STEP = AWG_MOD_AMPL_DWELL_ON + AWG_MOD_AMPL_DWELL_OFF  # seconds
+            # AWG_MOD_AMPL_DWELL = 0.5  # seconds
             AWG_MOD_AMPL_NUM_STEPS = 2
             AWG_MOD_AMPL_CYCLES = 8
+        elif TEST_TYPE == 'VAR3':
+            AWG_MOD_AMPL_DWELL_ON = 0.25  # seconds
+            AWG_MOD_AMPL_DWELL_OFF = 0.75  # seconds
+            AWG_MOD_AMPL_DWELL_PER_STEP = AWG_MOD_AMPL_DWELL_ON + AWG_MOD_AMPL_DWELL_OFF  # seconds
+            AWG_MOD_AMPL_NUM_STEPS = 2
+            AWG_MOD_AMPL_CYCLES = int(np.floor(8 / AWG_MOD_AMPL_DWELL_PER_STEP))
+            print("Number of cycles (VAR3 input): {}".format(AWG_MOD_AMPL_CYCLES))
+        elif TEST_TYPE == 'STD1SIN':
+            AWG_WAVE = 'SIN'  # SIN, SQU, RAMP, PULS, DC
+            AWG_MOD_AMPL_DWELL_ON = 0.15  # seconds
+            AWG_MOD_AMPL_DWELL_OFF = 0.0  # seconds
+            AWG_MOD_AMPL_DWELL_PER_STEP = AWG_MOD_AMPL_DWELL_ON + AWG_MOD_AMPL_DWELL_OFF  # seconds
+            # AWG_MOD_AMPL_DWELL = 0.15  # seconds
+            AWG_MOD_AMPL_NUM_STEPS = 25
+            AWG_MOD_AMPL_CYCLES = 1
         else:
             raise ValueError("Invalid test type.")
+        # AWG voltages
         OUTPUT_MOD_AMPL_VALUES_RAMP = np.linspace(AWG_MOD_AMPL_START, AWG_MOD_AMPL_STOP, num=AWG_MOD_AMPL_NUM_STEPS)
         AWG_MOD_AMPL_VALUES_RAMP = required_input_to_amplifier(
             gain=AMPLIFIER_GAIN, output_voltage=OUTPUT_MOD_AMPL_VALUES_RAMP)
         AWG_MOD_AMPL_VALUES = append_reverse(AWG_MOD_AMPL_VALUES_RAMP, single_point_max=True)
         AWG_MOD_AMPL_STEP = np.round(np.mean(np.diff(OUTPUT_MOD_AMPL_VALUES_RAMP)), 3)  # Volts
+        # Dwell times
+        if TEST_TYPE in ['STD1', 'STD2', 'STD1SIN']:
+            AWG_MOD_DWELL_VALUES = np.ones_like(AWG_MOD_AMPL_VALUES) * AWG_MOD_AMPL_DWELL_PER_STEP
+        elif TEST_TYPE in ['STD3', 'VAR3']:
+            AWG_MOD_DWELL_VALUES_RAMP = np.array([AWG_MOD_AMPL_DWELL_OFF, AWG_MOD_AMPL_DWELL_ON])
+            AWG_MOD_DWELL_VALUES = append_reverse(AWG_MOD_DWELL_VALUES_RAMP, single_point_max=True)
+        else:
+            raise ValueError("Invalid test type.")
     # specify unique and descriptive filename as save_id
     # SAVE_ID = ('tid{}_{}_{}Hz_{}pDC_{}{}_{}VDC-offset'.format(TID, AWG_WAVE, AWG_FREQ, AWG_SQUARE_DUTY_CYCLE, OUTPUT_VOLT, AWG_VOLT_UNIT, OUTPUT_DC_OFFSET))
     SAVE_ID = 'tid{}_test{}_{}V_{}Hz{}'.format(TID, TEST_TYPE, OUTPUT_VOLT, AWG_FREQ, AWG_WAVE)
+
     # ---
     # Keithley 6517a monitor
     K1_MONITOR = 'VOLT'  # 'CURR' or 'VOLT'
@@ -587,7 +627,9 @@ if __name__ == "__main__":
             AWG_MOD_AMPL_START = 0.0
             AWG_MOD_AMPL_STEP = 0.0
             AWG_MOD_AMPL_STOP = 0.0
-            AWG_MOD_AMPL_DWELL = 0.0
+            AWG_MOD_AMPL_DWELL_OFF = 0.0
+            AWG_MOD_AMPL_DWELL_ON = 0.0
+            AWG_MOD_AMPL_DWELL_PER_STEP = 0.0
             AWG_MOD_AMPL_NUM_STEPS = 0.0
             AWG_MOD_AMPL_CYCLES = 0.0
             AWG_MOD_AMPL_VALUES = 'NONE'
@@ -624,10 +666,13 @@ if __name__ == "__main__":
             'awg_mod_ampl_start': AWG_MOD_AMPL_START,
             'awg_mod_ampl_step': AWG_MOD_AMPL_STEP,
             'awg_mod_ampl_stop': AWG_MOD_AMPL_STOP,
-            'awg_mod_ampl_dwell': AWG_MOD_AMPL_DWELL,
+            'awg_mod_ampl_dwell_off': AWG_MOD_AMPL_DWELL_OFF,
+            'awg_mod_ampl_dwell_on': AWG_MOD_AMPL_DWELL_ON,
+            'awg_mod_ampl_dwell_per_step': AWG_MOD_AMPL_DWELL_PER_STEP,
             'awg_mod_ampl_num_steps': AWG_MOD_AMPL_NUM_STEPS,
             'awg_mod_ampl_cycles': AWG_MOD_AMPL_CYCLES,
             'awg_mod_ampl_values': AWG_MOD_AMPL_VALUES,
+            'awg_mod_dwell_values': AWG_MOD_DWELL_VALUES,
             'awg_output_termination': AWG_OUTPUT_TERMINATION,
             'amplifier_gain': AMPLIFIER_GAIN,
             'awg_min_allowable_amplitude': AWG_MIN_ALLOWABLE_AMPLITUDE,
