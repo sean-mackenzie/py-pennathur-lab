@@ -475,10 +475,10 @@ if __name__ == "__main__":
         os.makedirs(SAVE_DIR)
 
     # test id
-    TEST_TYPE = 'STD1SIN'
-    AWG_FREQ = 1  # 0.001 to 10000000
-    OUTPUT_VOLT = 345  # max bipolar: 350 V; max unipolar: 700 V
-    TID = 55
+    TEST_TYPE = 'STD3'
+    AWG_FREQ = 1000  # 0.001 to 10000000
+    OUTPUT_VOLT = 180  # max bipolar: 350 V
+    TID = 11
 
     # --- --- SETUP INSTRUMENTS
     if TEST_TYPE == 'CAL':

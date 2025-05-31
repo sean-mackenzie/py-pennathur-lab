@@ -398,21 +398,22 @@ if __name__ == "__main__":
     # ---
     # -
     # setup base directory
-    base_dir = r'C:\Users\nanolab\Box\2024\zipper_paper\Methods\I-V-Resistance Measurements'
+    base_dir = r'C:\Users\nanolab\Desktop\sean\05312025_W13_Pads-Only\CapacitorLeakage'
     # -
-    test_subject_id = 'C10-20pT_25nmAu'
+    test_subject_id = 'W13-C3'
     save_dir = os.path.join(base_dir, test_subject_id)
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
     # -
     # specify test sequence: SQSW, STSW, CLE, ALTP
-    test_type = 'ALTP'
-    save_id = '{}_test1'.format(test_type)
+    test_type = 'CLE'
+    tid = 1
+    save_id = 'tid{}_{}'.format(tid, test_type)
     dict_sense = {
         'func': "CURR",
-        'auto': 'OFF',  # ON OFF
-        'rang': 20E-3,  # (200 pA, 20 mA)
-        'nplc': 10,  # (0.01, 10): if NPLC < 1.0, then front panel display is disabled for speed
+        'auto': 'ON',  # ON OFF
+        'rang': 2E-9,  # (200 pA, 20 mA)
+        'nplc': 1,  # (0.01, 10): if NPLC < 1.0, then front panel display is disabled for speed
     }  # You can set both a CURR:RANG and AUTO:ON, then RANG defines the upper-bound to seek optimal range.
     integration_period = dict_sense['nplc'] / 60
     print("Integration period = {} ms".format(np.round(integration_period * 1000)))
@@ -488,9 +489,9 @@ if __name__ == "__main__":
         """
         shortest_time = integration_period * 1.5
         # inputs
-        start_voltage = -0.5  # volts (default: 1)
-        stop_voltage = 0.5  # volts (default: 10)
-        step_voltage = 0.05  # volts (default: 1)
+        start_voltage = 10  # volts (default: 1)
+        stop_voltage = 150  # volts (default: 10)
+        step_voltage = 10  # volts (default: 1)
         step_time = shortest_time  # seconds (default: 1)
         # -
         # derived inputs
@@ -524,8 +525,8 @@ if __name__ == "__main__":
         Notes from speed test:
             * Using a time interval of 0.01, the actual per-sample time was 15 ms (which agrees with specified time).
         """
-        bias_voltage = 0.5  # volts (default: 1)
-        number_of_readings = 50  # integer number (default: 10)
+        bias_voltage = 10  # volts (default: 1)
+        number_of_readings = 100  # integer number (default: 10)
         time_interval = integration_period * 1.25  # seconds (default: 1)
         # set PyVisa timeout
         estimated_timeout = (number_of_readings * time_interval * 3.5) * 1000  # (ms)

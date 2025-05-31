@@ -137,14 +137,14 @@ if __name__ == "__main__":
 
     # --- HARDWARE SETUP
     # Keithley 6517 electrometer used as voltage source and coulomb meter
-    K1_BOARD_INDEX, K1_GPIB, K1_INST = 2, 27, '6517b'
+    K1_BOARD_INDEX, K1_GPIB, K1_INST = 0, 27, '6517b'
 
     # ---
 
     # root test subject
-    BASE_DIR = r'C:\Users\nanolab\Box\2024\zipper_paper\Methods\CapacitanceMeasurements'
+    BASE_DIR = r'C:\Users\nanolab\Desktop\sean\05312025_W13_Pads-Only\Capacitance'
     TEST_TYPE = 'CAPACITANCE'
-    TEST_SUBJECT = '3.3nF'
+    TEST_SUBJECT = 'B3_R474kOhms'
     RESISTOR_IN_SERIES = 474e3  # Ohms
     R_LABEL = 'R_474kOhms'
     second_pass_modifiers = True  # True False
@@ -160,14 +160,14 @@ if __name__ == "__main__":
             Regardless of the NPLC or timeout. 
     """
     # ---
-    TID = 110
-    SOURCE_VOLTAGE = 101  # voltage
+    TID = 10
+    SOURCE_VOLTAGE = 100  # voltage
     SENSE_FUNC = 'CHAR'  # 'RES', 'CURR', 'CHAR'
-    SENSE_NPLC = 0.15  # 0.01 to 10
-    SENSE_NUM_SAMPLES = 400
+    SENSE_NPLC = 0.3  # 0.01 to 10 (0.3, 250 was working)
+    SENSE_NUM_SAMPLES = 250
     #SENSE_USE_REFERENCE = None  # 'CHAR', 'ZCOR', or None
     #SENSE_RANGE_AUTO = 'OFF'
-    SENSE_RANGE = 2e-6  # Coulombs: 0 to 2e6
+    SENSE_RANGE = 20e-9  # Coulombs: 0 to 2e6
 
     # ---
 

@@ -34,15 +34,21 @@ def numpy_array_to_string(arr):
 # ----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    check_inst = False  # True False
+    if check_inst is True:
+        rm = pyvisa.ResourceManager()
+        print(rm.list_resources())  # only list "::INSTR" resources
+        raise ValueError("Check instruments are connected.")
 
     # --- INPUTS
 
-    path_results = r'C:\Users\nanolab\Desktop\sean'
-    test_num = 2  # 1: Observe by-eye, 2: Slow linear ramp, 3: Fast ramp, 4: Staircase ramp, 5: Step and Hold
+    path_results = r'C:\Users\nanolab\Desktop\DielectricAbsorption\Capacitor_820pF'
+    test_num = 1  # 1: Observe by-eye, 2: Slow linear ramp, 3: Fast ramp, 4: Staircase ramp, 5: Step and Hold
     Vmax, Vstep = 5, 0.5
     save_id = 'test1_test{}_{}V'.format(test_num, Vmax)
     save_fig = True
 
+    BOARD_INDEX = 1
     GPIB = 25
 
 
@@ -125,7 +131,8 @@ if __name__ == "__main__":
     # ---
 
     rm = pyvisa.ResourceManager()
-    keithley = rm.open_resource("GPIB::{}".format(GPIB))
+    # keithley = rm.open_resource("GPIB::{}".format(GPIB))
+    keithley = rm.open_resource("GPIB{}::{}::INSTR".format(BOARD_INDEX, GPIB), timeout=5000)
 
     # 0.
     keithley.write('*RST')  # Restore GPIB default
